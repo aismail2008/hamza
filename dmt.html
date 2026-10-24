@@ -224,6 +224,14 @@ details.faq p{margin:10px 0 0; color:var(--muted)}
 .w.mark{opacity:1; background:var(--accent); color:#fff; box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 35%, transparent)}
 .w.err{background:var(--bad); color:#fff; opacity:1; text-decoration:line-through; text-decoration-thickness:2px}
 .w.dim{opacity:.25}
+.wc{display:flex; align-items:stretch; min-width:0}
+.wc .w{flex:1; min-width:0}
+.spk{display:none; flex:none; width:1.7em; border:0; background:transparent; color:var(--accent); border-radius:50%; padding:0; place-items:center; cursor:pointer}
+.spk svg{width:1.05em; height:1.05em; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round}
+.spk:hover{background:var(--hover)}
+.spk.say{background:var(--accent); color:#fff}
+.board.spk-on .spk{display:grid}
+.board.spk-on .row{grid-template-columns:2.2em repeat(5,minmax(10.4em,1fr))}
 .board.blur .rows{filter:blur(10px); pointer-events:none; user-select:none}
 .overlay{position:absolute; inset:0; display:grid; grid-template-columns:minmax(0,1fr); place-items:center; padding:16px; text-align:center}
 .ov-card{width:100%; max-width:520px; padding:30px; border-radius:26px; background:var(--glass); border:1px solid var(--line); box-shadow:var(--shadow);
@@ -428,6 +436,7 @@ nl: {
   guideTitle:'Gids voor beginners', guideIntro:'Nog nooit van de DMT gehoord? Geen zorgen. Deze gids legt het in gewone taal uit, stap voor stap.', guideStart:'Start meteen met oefenen',
   normTitle:'Hamza t.o.v. M7 en E7', normModeSchool:'Kaart 2+3 (zoals op school)', normMode123:'Kaart 1+2+3',
   lgM7:'M7 niveau III (gemiddeld)', lgE7:'E7 niveau III (gemiddeld)', lgTop:'E7 niveau I (top)', lgHamza:'Hamza',
+  spkLabel:'Zeg dit woord hardop', spkHint:'Twijfel je? Tik op het luidsprekertje naast een woord.', spkNone:'Deze browser kan geen woorden voorlezen.',
   lvlTitle:'Niveau-tabel: welke score hoort bij welk niveau?', lvlCards:'Kaarten', lvlExam:'Toets',
   lvlNote:'Totaal aantal goed gelezen woorden (DMT versie 2018). I is de beste groep, III het midden en V de zwakste. Gemarkeerd: waar Hamza nu zit, volgens de gekozen weergave. Bron: Cito-tabellen via een schoolwebsite, controleer het met de school. Oude DMT-versie (2009): landelijk gemiddelde 90 bij M7 en 95 bij E7.',
   normNeed:'Lees kaart 2 en kaart 3 van een toets (bij Kaart 1+2+3 ook kaart 1) om het eerste punt te zien. De grafiek groeit na elke toets vanzelf mee.',
@@ -501,6 +510,7 @@ en: {
   guideTitle:'Guide for beginners', guideIntro:'Never heard of the DMT? No worries. This guide explains it in plain language, step by step.', guideStart:'Start practising now',
   normTitle:'Hamza vs M7 and E7', normModeSchool:'Cards 2+3 (as at school)', normMode123:'Cards 1+2+3',
   lgM7:'M7 level III (average)', lgE7:'E7 level III (average)', lgTop:'E7 level I (top)', lgHamza:'Hamza',
+  spkLabel:'Say this word out loud', spkHint:'In doubt? Tap the small speaker next to a word.', spkNone:'This browser cannot read words aloud.',
   lvlTitle:'Level table: which score belongs to which level?', lvlCards:'Cards', lvlExam:'Test',
   lvlNote:'Total number of correctly read words (DMT version 2018). I is the best group, III the middle and V the weakest. Highlighted: where Hamza is now, for the selected view. Source: Cito tables via a school website, check with the school. Old DMT version (2009): national average 90 at M7 and 95 at E7.',
   normNeed:'Read card 2 and card 3 of a test (for Cards 1+2+3 also card 1) to see the first point. The chart grows by itself after every test.',
@@ -889,13 +899,44 @@ function setStageTexts() {
   $('#ovStart').textContent = t('go');
 }
 
+const SPK_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
+let nlVoice = null;
+function pickVoice() {
+  if (!('speechSynthesis' in window)) return;
+  const vs = speechSynthesis.getVoices();
+  nlVoice = vs.find(v => /^nl[-_]NL/i.test(v.lang)) || vs.find(v => /^nl/i.test(v.lang)) || null;
+}
+if ('speechSynthesis' in window) { pickVoice(); speechSynthesis.addEventListener && speechSynthesis.addEventListener('voiceschanged', pickVoice); }
+let curAudio = null;
+function speakTTS(word, btn) {
+  if (!('speechSynthesis' in window)) { btn.classList.remove('say'); alert(t('spkNone')); return; }
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(word);
+  u.lang = 'nl-NL'; if (nlVoice) u.voice = nlVoice;
+  u.rate = .8; u.volume = 1;
+  u.onend = u.onerror = () => btn.classList.remove('say');
+  speechSynthesis.speak(u);
+}
+function speak(word, btn) {
+  if (curAudio) { curAudio.pause(); curAudio = null; }
+  if ('speechSynthesis' in window) speechSynthesis.cancel();
+  $$('.spk.say', rowsEl).forEach(x => x.classList.remove('say'));
+  btn.classList.add('say');
+  const a = new Audio(`audio/${encodeURIComponent(word)}.mp3`);
+  curAudio = a;
+  a.onended = () => btn.classList.remove('say');
+  a.onerror = () => { if (curAudio === a) speakTTS(word, btn); };
+  const pr = a.play();
+  if (pr && pr.catch) pr.catch(() => { if (curAudio === a) speakTTS(word, btn); });
+}
+
 function openStage(e, c) {
   wake();
   st = { e, c, words: DATA[e - 1][c - 1], phase: 'ready', marker: -1, errors: new Set(), mode: 'last', raf: 0, t0: 0 };
   let html = '';
   for (let r = 0; r < 30; r++) {
     html += `<div class="row" data-r="${r}"><span class="rn">${r + 1}</span>`;
-    for (let k = 0; k < 5; k++) { const i = r * 5 + k; html += `<button class="w" data-i="${i}" tabindex="-1">${st.words[i]}</button>`; }
+    for (let k = 0; k < 5; k++) { const i = r * 5 + k; html += `<span class="wc"><button class="w" data-i="${i}" tabindex="-1">${st.words[i]}</button><button class="spk" data-s="${i}" tabindex="-1" aria-label="${t('spkLabel')}" title="${t('spkLabel')}">${SPK_ICON}</button></span>`; }
     html += '</div>';
   }
   rowsEl.innerHTML = html;
@@ -918,13 +959,14 @@ function setRing(left) {
 function updateHint() {
   if (!st) return;
   const h = { ready: t('readyHint'), count: t('readyHint'), running: t('hintRun'), mark: st.mode === 'last' ? t('hintLast') : t('hintErr') }[st.phase] || '';
-  $('#stHint').textContent = h;
+  $('#stHint').textContent = st.phase === 'mark' ? `${h} ${t('spkHint')}` : h;
   $('#segLast').classList.toggle('on', st.mode === 'last');
   $('#segErr').classList.toggle('on', st.mode === 'errors');
 }
 
 function updateMarks() {
   const run = st.phase === 'running', mk = st.phase === 'mark';
+  board.classList.toggle('spk-on', mk);
   $$('.w', rowsEl).forEach(b => {
     const i = +b.dataset.i;
     b.classList.toggle('past', run && i < st.marker);
@@ -981,6 +1023,8 @@ function scrollToWord(i) {
 }
 
 rowsEl.addEventListener('click', ev => {
+  const sp = ev.target.closest('.spk');
+  if (sp && st) { speak(st.words[+sp.dataset.s], sp); return; }
   const b = ev.target.closest('.w'); if (!b || !st) return;
   const i = +b.dataset.i;
   if (st.phase === 'running') { st.marker = i; updateMarks(); return; }
@@ -1002,6 +1046,8 @@ $('#zOut').addEventListener('click', () => { zoom = Math.max(.7, +(zoom - .15).t
 
 function closeStage(force) {
   if (st && (st.phase === 'running' || st.phase === 'mark' || st.phase === 'count') && !force && !confirm(t('confirmQuit'))) return;
+  if (curAudio) { curAudio.pause(); curAudio = null; }
+  if ('speechSynthesis' in window) speechSynthesis.cancel();
   if (st) { clearInterval(st.raf); st.phase = 'closed'; }
   $('#stage').hidden = true; document.body.style.overflow = '';
   renderAll();
