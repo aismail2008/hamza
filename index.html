@@ -1,0 +1,879 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DMT Trainer – Hamza</title>
+<meta name="description" content="Oefen de Drie-Minuten-Toets (DMT) voor groep 7: 10 toetsen, 30 kaarten, timer, score en voortgang.">
+<style>
+:root{
+  --bg:#eef2ff; --ink:#0f172a; --muted:#5b6478; --glass:rgba(255,255,255,.74); --solid:#ffffff;
+  --line:rgba(15,23,42,.10); --accent:#4f46e5; --accent2:#06b6d4;
+  --c1:#16a34a; --c2:#f59e0b; --c3:#8b5cf6; --ok:#16a34a; --bad:#e11d48;
+  --blob1:#c7d2fe; --blob2:#a5f3fc; --shadow:0 12px 34px rgba(30,41,59,.13);
+  --stage:#f5f7ff; --band:rgba(79,70,229,.045); --hover:rgba(79,70,229,.12);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0b1020; --ink:#e8ecf5; --muted:#9aa5bd; --glass:rgba(20,27,46,.72); --solid:#141b2e;
+    --line:rgba(255,255,255,.10); --accent:#818cf8; --accent2:#22d3ee;
+    --c1:#4ade80; --c2:#fbbf24; --c3:#a78bfa; --ok:#4ade80; --bad:#fb7185;
+    --blob1:#1e1b4b; --blob2:#083344; --shadow:0 12px 34px rgba(0,0,0,.45);
+    --stage:#0e1426; --band:rgba(129,140,248,.07); --hover:rgba(129,140,248,.2);
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; color:var(--ink); min-height:100vh;
+  font-family:"Atkinson Hyperlegible","Trebuchet MS",Verdana,system-ui,sans-serif; line-height:1.45;
+  background:
+    radial-gradient(1100px 560px at 8% -8%, var(--blob1) 0, transparent 62%),
+    radial-gradient(900px 520px at 100% 0, var(--blob2) 0, transparent 58%),
+    var(--bg);
+  background-attachment:fixed;
+}
+button{font:inherit; color:inherit; cursor:pointer}
+h1,h2,h3{margin:0; line-height:1.15}
+:focus-visible{outline:3px solid var(--accent); outline-offset:2px; border-radius:10px}
+[hidden]{display:none !important}
+
+/* ---------- header ---------- */
+.top{
+  position:sticky; top:0; z-index:20; display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+  padding:12px clamp(14px,3vw,32px); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+  background:var(--glass); border-bottom:1px solid var(--line);
+}
+.brand{display:flex; align-items:center; gap:12px; margin-right:auto}
+.logo{width:44px; height:44px; border-radius:14px; display:grid; place-items:center; color:#fff;
+  background:linear-gradient(135deg,var(--accent),var(--accent2)); box-shadow:0 6px 16px rgba(79,70,229,.35)}
+.brand h1{font-size:1.25rem; letter-spacing:.2px}
+.brand p{margin:0; font-size:.85rem; color:var(--muted)}
+.tabs{display:flex; gap:6px; padding:5px; border-radius:999px; background:var(--glass); border:1px solid var(--line)}
+.tabs button{border:0; background:transparent; padding:9px 18px; border-radius:999px; font-weight:700; color:var(--muted); transition:.2s}
+.tabs button.on{color:#fff; background:linear-gradient(135deg,var(--accent),var(--accent2)); box-shadow:0 4px 12px rgba(79,70,229,.3)}
+.tabs button:not(.on):hover{color:var(--ink); background:var(--hover)}
+.tools{display:flex; align-items:center; gap:10px}
+.streak{display:inline-flex; align-items:center; gap:6px; padding:7px 12px; border-radius:999px; font-weight:800;
+  background:var(--glass); border:1px solid var(--line)}
+.streak svg{color:#f97316}
+.ghost-btn{border:1px solid var(--line); background:var(--glass); padding:7px 12px; border-radius:999px; font-weight:800}
+
+main{max-width:1120px; margin:0 auto; padding:clamp(14px,3vw,30px)}
+.glass{background:var(--glass); border:1px solid var(--line); border-radius:24px; box-shadow:var(--shadow);
+  backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px)}
+h3.sec{margin:28px 0 12px; font-size:1.05rem; color:var(--muted); text-transform:uppercase; letter-spacing:.09em}
+
+/* ---------- buttons ---------- */
+.btn{border:1px solid var(--line); background:var(--solid); padding:11px 20px; border-radius:14px; font-weight:800; transition:transform .15s, box-shadow .2s}
+.btn:hover{transform:translateY(-1px); box-shadow:0 6px 16px rgba(30,41,59,.14)}
+.btn:active{transform:translateY(0)}
+.btn.primary{border:0; color:#fff; background:linear-gradient(135deg,var(--accent),var(--accent2)); box-shadow:0 8px 20px rgba(79,70,229,.32)}
+.btn.big{padding:15px 28px; font-size:1.1rem; border-radius:16px}
+.btn.ghost{background:transparent}
+.btn[disabled]{opacity:.45; pointer-events:none}
+
+/* ---------- hero ---------- */
+.hero{display:grid; grid-template-columns:1.3fr 1fr; gap:22px; padding:clamp(18px,3vw,32px); align-items:center}
+.hero h2{font-size:clamp(1.7rem,4vw,2.5rem); margin-bottom:8px;
+  background:linear-gradient(90deg,var(--accent),var(--accent2)); -webkit-background-clip:text; background-clip:text; color:transparent}
+.hero p{margin:0 0 18px; color:var(--muted); font-size:1.05rem; max-width:46ch}
+.chips{display:grid; grid-template-columns:repeat(3,1fr); gap:10px}
+.chip{padding:14px 10px; text-align:center; border-radius:18px; background:var(--solid); border:1px solid var(--line)}
+.chip b{display:block; font-size:2rem; line-height:1}
+.chip span{font-size:.78rem; color:var(--muted)}
+
+/* ---------- pills + tiles ---------- */
+.pills{display:grid; grid-template-columns:repeat(auto-fill,minmax(88px,1fr)); gap:10px}
+.pill{position:relative; border:2px solid var(--line); background:var(--glass); border-radius:18px; padding:12px 6px 10px; font-weight:800; text-align:center; transition:.18s}
+.pill:hover{transform:translateY(-2px)}
+.pill.on{border-color:var(--accent); background:var(--solid); box-shadow:0 8px 20px rgba(79,70,229,.2)}
+.pill .n{display:block; font-size:1.4rem}
+.pill small{display:block; color:var(--muted); font-weight:600; font-size:.72rem}
+.pill .dots{display:flex; justify-content:center; gap:5px; margin-top:6px}
+.pill .dots i{width:9px; height:9px; border-radius:50%; background:var(--line)}
+.pill .dots i.d1.done{background:var(--c1)} .pill .dots i.d2.done{background:var(--c2)} .pill .dots i.d3.done{background:var(--c3)}
+
+.tiles{display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:18px}
+.tile{position:relative; overflow:hidden; padding:22px; display:flex; flex-direction:column; gap:14px}
+.tile::before{content:""; position:absolute; inset:0 0 auto 0; height:7px; background:var(--cc)}
+.tile.c1{--cc:var(--c1)} .tile.c2{--cc:var(--c2)} .tile.c3{--cc:var(--c3)}
+.tile-top{display:flex; justify-content:space-between; align-items:center}
+.badge{font-weight:900; font-size:1.25rem}
+.lvl{padding:4px 12px; border-radius:999px; font-weight:800; font-size:.82rem; color:#fff; background:var(--cc)}
+.bars{display:flex; gap:5px}
+.bars i{height:8px; flex:1; border-radius:6px; background:var(--line)}
+.bars i.f{background:var(--cc)}
+.tile-stats{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+.tile-stats div{padding:10px 12px; border-radius:14px; background:var(--solid); border:1px solid var(--line)}
+.tile-stats small{display:block; color:var(--muted); font-size:.74rem}
+.tile-stats b{font-size:1.5rem}
+.tile .btn{background:var(--cc); color:#fff; border:0; margin-top:auto; font-size:1.05rem; padding:13px}
+.tile.c2 .btn{color:#1f1300}
+
+/* ---------- progress ---------- */
+.stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:18px}
+.stat{padding:20px; position:relative; overflow:hidden}
+.stat::before{content:""; position:absolute; inset:0 auto 0 0; width:7px; background:var(--cc)}
+.stat.c1{--cc:var(--c1)} .stat.c2{--cc:var(--c2)} .stat.c3{--cc:var(--c3)}
+.stat h4{margin:0 0 10px; font-size:1.05rem}
+.stat .row4{display:grid; grid-template-columns:repeat(4,1fr); gap:6px; text-align:center}
+.stat .row4 b{display:block; font-size:1.5rem}
+.stat .row4 small{color:var(--muted); font-size:.72rem}
+.goal{margin-top:14px; display:flex; align-items:center; gap:10px; font-size:.85rem; color:var(--muted)}
+.goal input{width:74px; padding:7px 9px; border-radius:10px; border:1px solid var(--line); background:var(--solid); color:var(--ink); font:inherit; font-weight:800}
+.meter{height:10px; border-radius:8px; background:var(--line); overflow:hidden; margin-top:8px}
+.meter i{display:block; height:100%; background:var(--cc); border-radius:8px; transition:width .6s}
+.panel{padding:clamp(16px,2.5vw,26px); margin-top:20px}
+.legend{display:flex; gap:16px; flex-wrap:wrap; font-size:.85rem; color:var(--muted); margin:0 0 6px}
+.legend i{display:inline-block; width:12px; height:12px; border-radius:50%; margin-right:6px; vertical-align:-1px}
+svg.chart{width:100%; height:auto; display:block}
+.chart text{fill:var(--muted); font-size:11px}
+.tbl{width:100%; border-collapse:collapse; font-size:.95rem}
+.tbl th,.tbl td{padding:9px 10px; text-align:center; border-bottom:1px solid var(--line)}
+.tbl th{color:var(--muted); font-size:.78rem; text-transform:uppercase; letter-spacing:.06em}
+.tbl td:first-child,.tbl th:first-child{text-align:left; font-weight:800}
+.tbl td.tot{font-weight:900}
+.hist{list-style:none; margin:0; padding:0; max-height:360px; overflow:auto}
+.hist li{display:flex; align-items:center; gap:12px; padding:10px 4px; border-bottom:1px solid var(--line)}
+.hist .dot{width:12px; height:12px; border-radius:50%; flex:none}
+.hist .when{margin-left:auto; color:var(--muted); font-size:.82rem}
+.hist b{font-size:1.1rem}
+.row-actions{display:flex; gap:10px; flex-wrap:wrap; margin-top:14px}
+.note{color:var(--muted); font-size:.85rem; margin:10px 0 0}
+.empty{color:var(--muted); padding:18px 4px}
+
+/* ---------- tips ---------- */
+.tipgrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:16px}
+.tip{padding:20px; display:flex; gap:14px}
+.tip .num{flex:none; width:38px; height:38px; border-radius:12px; display:grid; place-items:center; font-weight:900; color:#fff;
+  background:linear-gradient(135deg,var(--accent),var(--accent2))}
+.tip p{margin:0}
+
+/* ---------- stage (reading screen) ---------- */
+.stage{position:fixed; inset:0; z-index:50; display:flex; flex-direction:column; background:var(--stage)}
+.st-top{display:flex; align-items:center; gap:14px; padding:10px clamp(10px,2vw,24px); border-bottom:1px solid var(--line); background:var(--glass)}
+.st-title{margin-right:auto; display:flex; flex-direction:column}
+.st-title b{font-size:1.15rem}
+.st-title small{color:var(--muted)}
+.zoom{display:flex; gap:6px}
+.zoom button{border:1px solid var(--line); background:var(--solid); border-radius:10px; padding:7px 11px; font-weight:900}
+.counter{text-align:center; min-width:70px}
+.counter small{display:block; color:var(--muted); font-size:.7rem; text-transform:uppercase; letter-spacing:.08em}
+.counter b{font-size:1.7rem; line-height:1}
+.ring{position:relative; width:74px; height:74px; flex:none}
+.ring svg{width:100%; height:100%; transform:rotate(-90deg)}
+.ring circle{fill:none; stroke-width:7}
+.ring .bg{stroke:var(--line)}
+.ring .fg{stroke:var(--accent); stroke-linecap:round; stroke-dasharray:213.63; stroke-dashoffset:0}
+.ring.low .fg{stroke:var(--bad)}
+.ring b{position:absolute; inset:0; display:grid; place-items:center; font-size:1.45rem}
+.st-hint{padding:9px clamp(10px,2vw,24px); font-weight:700; background:var(--band); border-bottom:1px solid var(--line); min-height:42px}
+.board-wrap{position:relative; flex:1; min-height:0}
+.board{
+  --fit:min(1.5vw, calc((100dvh - 220px) / 30 * .6)); --zoom:1;
+  font-size:calc(max(14px, var(--fit)) * var(--zoom));
+  height:100%; overflow:auto; padding:8px clamp(6px,2vw,22px) 14px;
+}
+.rows{display:grid; grid-template-rows:repeat(30,minmax(1.75em,auto)); min-width:max-content; width:100%}
+.row{display:grid; grid-template-columns:2.2em repeat(5,minmax(8.6em,1fr)); align-items:stretch; border-radius:10px}
+.row:nth-child(even){background:var(--band)}
+.row.cur{background:var(--hover)}
+.rn{display:grid; place-items:center; color:var(--muted); font-size:.7em; font-weight:700; user-select:none}
+.w{border:0; background:transparent; font-size:1em; font-weight:700; letter-spacing:.015em; white-space:nowrap; padding:.2em .5em; border-radius:10px;
+  text-align:center; color:var(--ink); transition:background .12s, opacity .2s}
+.w:hover{background:var(--hover)}
+.w.past{opacity:.5}
+.w.mark{opacity:1; background:var(--accent); color:#fff; box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 35%, transparent)}
+.w.err{background:var(--bad); color:#fff; opacity:1; text-decoration:line-through; text-decoration-thickness:2px}
+.w.dim{opacity:.25}
+.board.blur .rows{filter:blur(10px); pointer-events:none; user-select:none}
+.overlay{position:absolute; inset:0; display:grid; grid-template-columns:minmax(0,1fr); place-items:center; padding:16px; text-align:center}
+.ov-card{width:100%; max-width:520px; padding:30px; border-radius:26px; background:var(--glass); border:1px solid var(--line); box-shadow:var(--shadow);
+  backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px)}
+.ov-card h2{font-size:1.9rem; margin-bottom:10px}
+.ov-card p{color:var(--muted); margin:0 0 20px; font-size:1.05rem}
+.count{font-size:min(34vw,220px); font-weight:900; line-height:1; background:linear-gradient(135deg,var(--accent),var(--accent2));
+  -webkit-background-clip:text; background-clip:text; color:transparent; animation:pop .7s ease-out}
+@keyframes pop{0%{transform:scale(.4); opacity:0} 40%{transform:scale(1.1); opacity:1} 100%{transform:scale(1)}}
+.st-bottom{display:flex; gap:10px; justify-content:center; align-items:center; flex-wrap:wrap; padding:10px; border-top:1px solid var(--line); background:var(--glass)}
+.seg{display:flex; padding:4px; border-radius:14px; background:var(--solid); border:1px solid var(--line)}
+.seg button{border:0; background:transparent; padding:9px 16px; border-radius:10px; font-weight:800; color:var(--muted)}
+.seg button.on{background:var(--accent); color:#fff}
+
+/* ---------- modal ---------- */
+.modal{position:fixed; inset:0; z-index:80; display:grid; place-items:center; padding:16px; background:rgba(8,12,28,.55); backdrop-filter:blur(6px)}
+.res{width:min(560px,100%); max-height:94vh; overflow:auto; padding:28px; background:var(--solid); border-radius:28px; border:1px solid var(--line); box-shadow:var(--shadow); text-align:center; animation:rise .35s ease-out}
+@keyframes rise{from{transform:translateY(24px) scale(.96); opacity:0} to{transform:none; opacity:1}}
+.stars{display:flex; justify-content:center; gap:8px; margin-bottom:6px}
+.stars svg{width:46px; height:46px; color:var(--line)}
+.stars svg.on{color:#f59e0b; filter:drop-shadow(0 4px 8px rgba(245,158,11,.5)); animation:pop .6s ease-out both}
+.stars svg:nth-child(2).on{animation-delay:.12s} .stars svg:nth-child(3).on{animation-delay:.24s}
+.res h2{font-size:1.6rem}
+.big-num{font-size:5.5rem; font-weight:900; line-height:1; margin:8px 0 0;
+  background:linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; background-clip:text; color:transparent}
+.res .unit{color:var(--muted); margin-bottom:14px}
+.res .grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:12px 0}
+.res .grid3 div{padding:12px 6px; border-radius:16px; background:var(--bg); border:1px solid var(--line)}
+.res .grid3 b{display:block; font-size:1.6rem}
+.res .grid3 small{color:var(--muted); font-size:.74rem}
+.delta{font-weight:800; margin:6px 0}
+.delta.up{color:var(--ok)} .delta.down{color:var(--bad)}
+.badge-new{display:inline-block; padding:6px 14px; border-radius:999px; font-weight:900; color:#fff; margin:6px 0 2px;
+  background:linear-gradient(135deg,#f59e0b,#ef4444)}
+.res .actions{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:18px}
+#confetti{position:fixed; inset:0; z-index:90; pointer-events:none}
+
+@media (max-width:760px){
+  .hero{grid-template-columns:1fr}
+  .tabs{order:3; width:100%; justify-content:space-between}
+  .tabs button{flex:1; padding:9px 6px}
+  .st-top{flex-wrap:wrap}
+  .zoom{order:5}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none !important; transition:none !important}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <div class="logo" aria-hidden="true">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.3-2 5-2 5s3.7-.5 5-2c.7-.8.7-2.1-.1-2.9a2.2 2.2 0 0 0-2.9-.1z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.9A12.9 12.9 0 0 1 22 2c0 2.7-.8 7.5-6 11a22.4 22.4 0 0 1-4 2z"/><path d="M9 12H4s.6-3 2-4c1.6-1.1 5 0 5 0"/><path d="M12 15v5s3-.6 4-2c1.1-1.6 0-5 0-5"/></svg>
+    </div>
+    <div><h1 data-i18n="appTitle">DMT Trainer</h1><p data-i18n="sub">Hamza · Groep 7</p></div>
+  </div>
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-tab="practice" class="on" data-i18n="tabPractice">Oefenen</button>
+    <button role="tab" data-tab="progress" data-i18n="tabProgress">Resultaten</button>
+    <button role="tab" data-tab="tips" data-i18n="tabTips">Tips</button>
+  </nav>
+  <div class="tools">
+    <span class="streak" id="streak" title="Streak"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2s5 4.5 5 10a5 5 0 0 1-10 0c0-1.6.6-2.9 1.5-4C9 10 10 11 11 11c0-3 1-6 1-9z"/></svg><b id="streakN">0</b></span>
+    <button class="ghost-btn" id="lang" aria-label="Language">EN</button>
+  </div>
+</header>
+
+<main>
+  <!-- PRACTICE -->
+  <section id="tab-practice">
+    <div class="hero glass">
+      <div>
+        <h2 data-i18n="hello">Hoi Hamza!</h2>
+        <p data-i18n="helloSub"></p>
+        <button id="recBtn" class="btn primary big"></button>
+      </div>
+      <div class="chips">
+        <div class="chip"><b id="chipTries">0</b><span data-i18n="chipTries"></span></div>
+        <div class="chip"><b id="chipBest">0</b><span data-i18n="chipBest"></span></div>
+        <div class="chip"><b id="chipStreak">0</b><span data-i18n="chipStreak"></span></div>
+      </div>
+    </div>
+    <h3 class="sec" data-i18n="pickExam"></h3>
+    <div id="examPills" class="pills"></div>
+    <h3 class="sec" data-i18n="pickCard"></h3>
+    <div id="cardTiles" class="tiles"></div>
+  </section>
+
+  <!-- PROGRESS -->
+  <section id="tab-progress" hidden>
+    <h3 class="sec" style="margin-top:6px" data-i18n="progressTitle"></h3>
+    <div id="statCards" class="stats"></div>
+    <div class="panel glass">
+      <h3 class="sec" style="margin-top:0" data-i18n="trend"></h3>
+      <div class="legend"><span><i style="background:var(--c1)"></i><span data-i18n="lvl1"></span></span><span><i style="background:var(--c2)"></i><span data-i18n="lvl2"></span></span><span><i style="background:var(--c3)"></i><span data-i18n="lvl3"></span></span></div>
+      <div id="chart"></div>
+    </div>
+    <div class="panel glass">
+      <h3 class="sec" style="margin-top:0" data-i18n="examTotals"></h3>
+      <div style="overflow:auto"><table class="tbl" id="totals"></table></div>
+      <p class="note" data-i18n="totalNote"></p>
+    </div>
+    <div class="panel glass">
+      <h3 class="sec" style="margin-top:0" data-i18n="history"></h3>
+      <ul class="hist" id="hist"></ul>
+      <div class="row-actions">
+        <button class="btn" id="csvBtn" data-i18n="exportCsv"></button>
+        <button class="btn" id="clearBtn" data-i18n="clearAll"></button>
+      </div>
+      <p class="note" data-i18n="localNote"></p>
+    </div>
+  </section>
+
+  <!-- TIPS -->
+  <section id="tab-tips" hidden>
+    <h3 class="sec" style="margin-top:6px" data-i18n="tipsTitle"></h3>
+    <div id="tipGrid" class="tipgrid"></div>
+    <div class="panel glass">
+      <h3 class="sec" style="margin-top:0" data-i18n="howTitle"></h3>
+      <div id="howList"></div>
+    </div>
+  </section>
+</main>
+
+<!-- STAGE -->
+<div id="stage" class="stage" hidden role="dialog" aria-modal="true" aria-labelledby="stTitle">
+  <div class="st-top">
+    <button id="stBack" class="btn ghost" aria-label="Back">&#8249; <span data-i18n="back"></span></button>
+    <div class="st-title"><b id="stTitle"></b><small id="stLvl"></small></div>
+    <div class="zoom"><button id="zOut" aria-label="Smaller text">A&minus;</button><button id="zIn" aria-label="Bigger text">A+</button></div>
+    <div class="counter"><small data-i18n="reached"></small><b id="stReached">0</b></div>
+    <div class="ring" id="ring" role="timer">
+      <svg viewBox="0 0 80 80"><circle class="bg" cx="40" cy="40" r="34"/><circle class="fg" id="ringFg" cx="40" cy="40" r="34"/></svg>
+      <b id="stTime">60</b>
+    </div>
+  </div>
+  <div id="stHint" class="st-hint" aria-live="polite"></div>
+  <div class="board-wrap">
+    <div id="board" class="board blur"><div class="rows" id="rows"></div></div>
+    <div id="overlay" class="overlay">
+      <div class="ov-card" id="ovCard">
+        <h2 id="ovTitle"></h2>
+        <p id="ovText"></p>
+        <button id="ovStart" class="btn primary big"></button>
+      </div>
+      <div class="count" id="ovCount" hidden></div>
+    </div>
+  </div>
+  <div class="st-bottom" id="stBottom" hidden>
+    <div class="seg" role="group">
+      <button id="segLast" data-i18n="segLast"></button>
+      <button id="segErr" data-i18n="segErr"></button>
+    </div>
+    <button id="finishBtn" class="btn primary big" data-i18n="finish"></button>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div id="modal" class="modal" hidden role="dialog" aria-modal="true">
+  <div class="res" id="res"></div>
+</div>
+<canvas id="confetti"></canvas>
+
+<script>
+(() => {
+'use strict';
+const DATA = [[["la","pan","hak","zet","wet","tip","dop","hij","tas","fit","en","es","bus","pet","jas","gel","zit","oom","rap","jou","lid","dus","bil","pak","lip","zak","koe","ton","tel","erg","las","lat","wol","bad","neus","uil","vos","weg","vijl","rest","kin","muts","vlug","vijf","tut","dol","hop","vak","film","kist","hol","duim","gul","het","wijn","zin","ei","rek","zij","vuur","gras","dan","top","gaf","naam","zoet","room","zie","stop","stuk","rib","mouw","gom","les","map","tijd","trap","trek","dor","wrat","kok","kous","zeep","zoek","snor","gif","kan","worm","net","kleur","hen","vier","man","vet","lang","volk","rots","vent","zal","woord","hart","week","som","mep","rij","rat","gat","tuin","dal","ziel","kraan","stof","pret","dag","put","das","lach","gek","dun","nip","saus","steen","list","mees","zout","slot","jurk","regen","wang","hout","zaal","rijst","tras","stil","lief","leeuw","strik","melk","brug","soep","hoed","verf","zwart","sneeuw","trein","licht","plant","vlees","paard","staart"],["foto","ruzie","engel","oven","vader","pauze","boter","kopen","lezen","markt","geven","parel","auto","pyjama","eigen","kamer","cirkel","slimme","heuvel","kameel","jaren","bijna","veilig","metaal","adres","rommel","liefde","wolken","merken","oceaan","kussen","zeker","varken","karton","ijsje","tomaat","kastje","zwaluw","halen","matroos","woorden","achter","feestje","gaatje","mandje","bakker","bloemen","hoogte","kleine","ketting","machine","staan","graag","appel","helder","melodie","bocht","kantoor","groente","vechten","wachten","piraat","maandag","gordijn","signaal","jongens","vriezen","kapper","orkest","eerlijk","schaduw","kijken","verkeer","praten","schepen","hangmat","sporten","raadsel","ringen","klusjes","snoepje","brommer","november","hoorbaar","waarom","bouwen","wijzen","pompoen","tunnel","pedaal","brengen","plafond","lekker","broertje","lichtjes","strand","sandalen","tekenen","beloven","rooster","muurtje","weleens","prachtig","schudden","fontein","druiven","vergeten","lichaam","proberen","beginnen","hoeveel","telefoon","knuffel","voorbij","branden","stoeien","theater","rekenen","logeren","meester","spiegel","straten","juffrouw","vakantie","vrolijk","maaltijd","knoppen","glimlach","formulier","mopperen","gezellig","schommel","doorgaan","fotograaf","landkaart","kerstmis","stropdas","hardlopen","wandelen","oplossen","luisteren","natuurlijk","vermoeid","vierkant","schilder","bijzonder","speeltuin","fietsband","grootvader","pannenkoek"],["nadruk","perfect","gratis","doelpunt","prikbord","wijsheid","melkboer","kapitein","macaroni","onderweg","kostbaar","verlaten","generaal","opdracht","ongeveer","helemaal","omgeving","kerstboom","woonkamer","voorlezen","waterfles","portret","rechtsaf","benieuwd","verhuizen","verwacht","praktisch","vermaak","architect","kenmerken","dakpannen","drukwerk","melodieus","strategie","notenboom","deelnemer","ontmoeten","prestatie","incident","regenpijp","oliebollen","pauzeren","toneelstuk","frambozen","televisie","verdwijnen","lawaaierig","parlement","muziekles","maatbeker","tuinhuisje","beginners","mobieltje","sneeuwpop","kaasschaaf","verandering","plaatselijk","kunstgebit","trampoline","jongensboek","vertrekken","gereedschap","anderhalve","schaakbord","tekenfilm","slaapkamer","decoratie","diepvries","instrument","sokkenlade","onderzoek","oplossing","rioolwater","bloemkool","boekenkast","inspectie","gezondheid","reisbureau","onverwacht","uitverkocht","sinterklaas","identiteit","binnenstad","verrassing","gymnastiek","postkantoor","gehoorzaam","doorlopend","volwassenen","verbinding","opblaasboot","uitrusting","ruimschoots","verzamelen","aanvankelijk","afspraakje","broodtrommel","hotelkamer","terugkeren","markttafel","landkaarten","noodzakelijk","fruitschaal","kruidenier","toekomstig","realistisch","herinnering","engelachtig","doorzichtig","gebeurtenis","moeilijkheid","vlaggenmast","veelbelovend","overstroming","controleren","merkwaardig","brandweerman","fruitsalade","interessant","verfrissend","keukenkastje","zwaartekracht","kranenwater","opmerkelijk","alternatief","schoolplein","beantwoorden","politieagent","bergbeklimmer","wetenschapper","aanwezigheid","bijvoorbeeld","brandblusser","ontbijttafel","buitengewoon","laboratorium","avontuurlijk","rolschaatsen","burgemeester","gezelligheid","uitzonderlijk","mededelingen","nieuwsgierig","daadwerkelijk","boterhamdoos","eetkamertafel","kantoorgebouw","knutselwerkje","suikerklontje","duidelijkheid"]],[["os","nu","al","na","mag","los","vol","met","tol","aan","tak","lui","ten","mak","nee","hom","pit","kom","sok","mik","ram","kus","hik","rok","mok","elk","rak","bal","sip","ruim","uur","vlag","wen","vaak","pas","gal","kou","wind","hap","keer","neef","bril","spel","mond","mof","zon","muis","tros","nul","mes","bot","lust","vin","kap","kop","hoe","zes","pil","reed","mos","bom","ster","bed","ven","vuil","kam","dik","mol","koud","lam","bij","mis","zee","wat","wit","zang","pij","taart","klein","vel","hand","hal","rol","roet","wel","blad","fiets","tent","dof","dorp","groen","oor","oog","kei","kaart","pot","hel","slak","wie","nek","dak","lucht","kar","jij","ren","vuist","vrij","wiel","mij","nest","kerk","spoor","water","klas","vlak","vork","zwoel","zand","lijm","stem","schip","rood","stok","stuur","vlot","zomer","slaap","vaart","ziek","weer","kind","spin","snel","zwaan","klok","rust","kloof","stad","koek","kreeg","zwak","zuur","kuil","zoen","tand","raam","leeg","vlieg","slang","vraag"],["bezem","naald","negen","nieuw","motor","lopen","laden","beroep","haven","ladder","zeggen","ridder","reizen","oranje","lastig","kramp","wortel","sokken","helpen","eenden","lepel","donker","morgen","winkel","mogen","hemel","meisje","dansen","dromen","buiten","raket","muziek","oogst","tonijn","omhoog","zondag","tulpen","geduld","vreemd","aardig","melken","kracht","trots","binnen","manier","kleding","lachen","sleutel","almaar","zebra","herfst","puzzel","banaan","grijpen","stilte","fruit","nergens","liedje","blijven","dorpen","geluid","plekje","kaarsen","paraplu","pakket","bewegen","acteur","kanten","zwaard","clown","lenen","papier","plaatje","dolfijn","deksel","bepaald","rennen","dapper","wereld","bureau","baasje","minder","fabriek","weekend","rijkdom","ruiter","haastig","schoenen","slinger","balkon","naaien","opruimen","bedelaar","keuken","vallen","konijn","kasteel","tevreden","grappig","planeet","tijdens","landen","begrip","leerling","gelukkig","kanaal","klimmen","betalen","roeien","nummer","kinderen","zingen","dikwijls","trappen","vlaggen","vandaag","potlood","laatste","ontbijt","noorden","vlinder","flessen","brieven","trommel","zakdoek","collega","vliegtuig","soldaat","bladeren","kalender","minuten","huisdier","stoplicht","racefiets","fluiten","vrienden","zaterdag","heerlijk","makkelijk","bordspel","scheuren","handschoen","buurvrouw","oefening","kampioen","edelsteen","eindelijk","dwarsfluit","mandarijn","vrachtwagen"],["nuttig","orgaan","mislukt","symbool","eveneens","optreden","publiek","kapsalon","spannend","neerslag","leesboek","huisvuil","mijnheer","tweeling","bedankt","avondeten","gekleurd","oefenboek","ijscoman","plantsoen","jaarmarkt","atletiek","ambulance","wederom","bezoeker","kwaliteit","voordeur","aangenaam","astronaut","spaghetti","dankbaar","moeizaam","eindstand","sensatie","verfkwast","rugzakken","vliegveld","tropische","rijstpap","dorpsplein","gedurende","boterbloem","aansluiten","plantenbak","bakkerij","vloeistof","drinkwater","verkenner","bestrijden","behoorlijk","stemming","eenvoudig","camouflage","kookboeken","vanavond","traditie","bromfiets","schoolbord","afgelopen","kunstenaar","kamerplant","apothekers","landbouwer","evenwicht","bestelling","grasmaaier","ingewikkeld","drogisterij","legpuzzel","medicijnen","klaslokaal","huishouden","koekenpan","expeditie","dierenarts","belangrijk","fotografie","meesterwerk","bevolking","lesrooster","pantoffels","professor","programma","brievenbus","schoonmaker","autosleutel","gasfornuis","bureaustoel","onschuldig","boekhandel","feestdagen","regelmatig","natuurkunde","zwemdiploma","gevaarlijk","stofzuiger","ruimtevaart","kinderwagen","voetgangers","belachelijk","democratie","motorfiets","basisschool","scheikunde","koninkrijk","eigenaardig","gelegenheid","speelkaarten","bekendheid","ongelukkig","nieuwsbrief","raamkozijn","handdoeken","verzamelaar","demonstratie","persoonlijk","eindexamen","vaardigheid","grootmoeder","jaargetijden","onmiddellijk","paardenstal","stratenmaker","gemeenschap","waterballon","knuffelbeer","alarmnummer","dierenverhaal","klokkenluider","verkeersbord","hobbelpaard","sportschool","universiteit","zelfstandig","samenwerking","dubbeldekker","verlegenheid","rechtvaardig","elektriciteit","spectaculair","vrijwilliger","geschiedenis","maatschappij","overheerlijk","nationaliteit","voorspelling","kleurpotloden","verkeerslicht","kleuterschool","achtervolging"]],[["es","uit","sok","hot","dan","hip","vel","jou","vod","bek","fel","kas","of","hal","nat","vat","om","dof","hik","kom","dit","bes","sik","had","hok","jas","lip","ben","gel","val","ton","bed","uur","vis","bon","lap","pit","lach","bak","plan","dop","op","gras","wit","bril","kus","knop","spel","raak","rad","als","dun","lot","dol","pret","hem","muur","zak","erg","kok","lust","sap","kip","hek","staf","mis","rug","keer","vent","mat","vlam","lijm","werk","rib","gum","bos","mak","plak","leer","voor","eet","hij","soep","tros","veer","snel","rots","ram","smal","saus","brug","vlug","zwem","krom","bit","van","hen","top","slot","trap","tik","gul","rust","vaag","maak","raam","mik","bil","gek","kist","ham","bol","vaart","zaag","klok","merk","touw","zoen","jurk","huis","land","melk","kloof","zeil","stoel","zuur","troep","knie","maan","kleur","lokt","poes","nest","sport","stap","zoet","zoon","kaas","jong","splijt","vloer","straat","water","zomer","vraag","vogel","slaap","nooit","vlees","trein"],["nacht","ruzie","bijna","avond","emmer","nieuw","clown","koper","toren","radio","afval","poesje","vragen","auto","passen","slapen","bonzen","tussen","dubbel","tafel","plekje","levend","onder","spelen","leraar","rondom","wapens","gebouw","beker","uitleg","robot","bezem","arbeid","koffie","dokter","vijver","suiker","indruk","armband","middag","rivier","nummers","mensen","kanten","paarden","tennis","kleine","gezicht","leggen","broeder","pinguin","kijken","mooiste","schakel","pauze","plakken","vorige","honger","jaren","duizend","olifant","werken","dorpen","woorden","rijden","lachen","warmte","zoveel","wijzen","breken","merken","koning","manier","bakker","spreken","cadeau","binnen","noorden","familie","voetbal","moeder","liefde","alleen","modder","gordijn","student","buurman","uurtje","brieven","kaarsen","ochtend","machine","cirkel","minuten","schaap","loterij","plezier","kwartier","tractor","daarom","mandje","paraplu","fornuis","scheuren","bagage","niemand","dinsdag","bruiloft","bakfiets","wandelen","vriendin","weekend","oefenen","briefje","giraffe","chocola","letters","speciaal","zwemmen","aardbei","stoppen","kunstwerk","kruiden","strijden","kinderen","seconde","woensdag","verhaal","eventjes","parkeren","kookboek","leerling","antwoord","hoorbaar","computer","rekening","gebruiken","bevriend","heerlijk","handschoen","dichtbij","kabouter","schoenen","schrijven","regenboog","makkelijk","chauffeur","verjaardag","restaurant","sinaasappel"],["symbool","vermaak","cijfers","rechtsaf","zeilboot","muzikaal","filmster","studeren","incident","spontaan","vanavond","tweeling","blijkbaar","vuurtoren","plantsoen","bewaken","vervelend","helemaal","klimrek","mislukt","brandstof","atletiek","tropische","machtig","dagboek","verstopt","woonkamer","discussie","werkgever","eenvoudig","directeur","apparaat","alledaags","weekendje","architect","wandelpad","opgeruimd","luchthaven","supporter","huisvuil","postzegels","kaartspel","bakkerij","dagelijks","koekenpan","aanwijzing","eiwitrijk","mondeling","professor","hulpmiddel","lampenkap","winterjas","hotelkamer","boekhandel","koninkrijk","frambozen","conducteur","eerlijkheid","beschrijven","voorzichtig","belachelijk","vuilnisman","bosbessen","haardvuur","stoelendans","statistiek","tijdschrift","wintersport","doorlopend","lawaaierig","bemoedigend","gedachtenis","minderheid","schaatsbaan","onverwacht","anderhalve","kamerplant","zandkasteel","vlaggenmast","vaatwasser","melkpakken","misverstand","ongeduldig","wasknijpers","beleefdheid","bijeenkomst","achtertuin","kunstenaar","belangrijk","grootmoeder","bouwvakker","bibliotheek","ingewikkeld","vrachtauto","zelfstandig","verkeersbord","verandering","zwembadwater","informatie","verdwijnen","concurrentie","hoogspanning","aandachtig","fruitsalade","basisschool","woordenboek","probleemloos","gezinsleden","gemakkelijk","herinnering","gereedschap","uitnodiging","lachwekkend","ruimschoots","krantenwijk","alternatief","handtekening","schoolreisje","tafeltennis","leeuwentemmer","rekenmachine","hulpverlener","voetgangers","schitterend","aardappelen","badkamerdeur","evenwichtig","monumentaal","dubbeldekker","ontwikkeling","bloementuin","stratenmaker","landkaarten","groentesoep","kantoorgebouw","werkelijkheid","burgemeester","bijzonderheid","kleinkinderen","speelkaarten","verkeerslicht","spectaculair","noodzakelijk","tandenborstel","geheimzinnig","klokkenluider","uitzonderlijk","raadselachtig","slagroomtaart","jubileumfeest"]],[["dit","of","rek","tas","lap","rad","lat","vos","op","rij","hem","mok","lam","pet","koe","mos","mag","eet","bal","met","kou","hop","mol","bij","dal","nek","kar","kei","zes","os","zin","elk","zee","aan","kip","ten","ei","gat","nu","oog","bes","vlam","bus","tras","bak","hap","zeil","list","rood","al","gum","zand","merk","pil","dak","mees","bad","mond","vod","pas","vaak","stof","bon","weer","som","hip","plan","ruim","leer","duim","mij","stem","raak","hak","kap","ven","vet","oor","gif","rest","koek","wat","wel","dorp","huis","wiel","rap","klas","jij","klein","kam","rok","vogel","fit","vrij","zout","net","val","maan","hand","oom","vuur","tut","bom","zeep","mouw","tijd","tand","neef","vier","film","roet","zie","vlak","mof","weg","plant","kaas","stil","kaart","lief","wijn","staf","paard","hoed","stop","naam","nooit","room","trek","blad","staart","vloer","stoel","ziek","tent","zaal","verf","regen","stuur","vuil","vlag","strik","spoor","groen","lucht","kraan","leeuw","steen","sneeuw"],["oven","foto","lenen","oogst","adres","afval","avond","bocht","modder","radio","metaal","kanaal","dapper","naaien","parel","meisje","arbeid","slapen","eigen","begrip","heuvel","kramp","vader","banaan","helpen","alleen","beroep","haven","staan","buiten","sokken","toren","waarom","mogen","fruit","rijden","reizen","karton","ladder","tomaat","pedaal","oceaan","liedje","koper","dansen","klimmen","ridder","zeggen","levend","bouwen","honger","potlood","rommel","baasje","tijdens","loterij","eerlijk","plaatje","robot","melodie","lepel","rijkdom","dolfijn","briefje","vijver","ruiter","wortel","papier","groente","straten","soldaat","collega","vlinder","stoeien","bagage","raadsel","uitleg","rondom","werken","tunnel","ringen","tulpen","strand","doorgaan","oefening","vrolijk","nummer","rivier","eenden","pakket","almaar","buurman","veilig","schudden","vragen","blijven","broertje","branden","feestje","pinguin","zwemmen","grappig","sleutel","huisdier","rekening","bedelaar","stoppen","ketting","broeder","letters","weleens","plakken","gelukkig","sporten","verkeer","ontbijt","bakfiets","vermoeid","wachten","paarden","buurvrouw","aardbei","speeltuin","dinsdag","bordspel","klusjes","strijden","laatste","vrienden","lichtjes","brommer","schrijven","hardlopen","vergeten","eindelijk","dichtbij","gezellig","opruimen","landkaart","sandalen","pannenkoek","mandarijn","bijzonder","kunstwerk","vriendin","dwarsfluit","vliegtuig","regenboog","grootvader","sinaasappel"],["nuttig","machtig","nadruk","publiek","orgaan","ijscoman","gratis","spannend","dankbaar","kostbaar","wijsheid","neerslag","tekenfilm","apparaat","supporter","bosbessen","klimrek","voordeur","stemming","rijstpap","oefenboek","verwacht","optreden","notenboom","muzikaal","voorlezen","omgeving","doelpunt","spontaan","onderweg","melodieus","huishouden","mobieltje","verlaten","grasmaaier","ongeveer","melkpakken","stofzuiger","schoolbord","beginners","vuurtoren","verfkwast","kruidenier","bezoeker","moeizaam","melkboer","boterbloem","gezondheid","identiteit","raamkozijn","brandstof","trampoline","vervelend","gasfornuis","conducteur","onderzoek","pantoffels","haardvuur","bekendheid","ontmoeten","achtertuin","spaghetti","bloemkool","interessant","vuilnisman","bromfiets","parlement","televisie","gehoorzaam","stoelendans","motorfiets","kinderwagen","meesterwerk","markttafel","verhuizen","vloeistof","gemeenschap","scheikunde","verbinding","klaslokaal","verzamelen","bureaustoel","schaatsbaan","fruitschaal","afspraakje","groentesoep","binnenstad","knuffelbeer","terugkeren","gemakkelijk","kaasschaaf","hobbelpaard","toneelstuk","eindexamen","nieuwsgierig","fotografie","uitrusting","broodtrommel","sinterklaas","brievenbus","kookboeken","tijdschrift","hulpmiddel","voorzichtig","aanwijzing","geheimzinnig","feestdagen","aandachtig","samenwerking","aansluiten","camouflage","postkantoor","nieuwsbrief","vrijwilliger","jaargetijden","natuurkunde","aardappelen","persoonlijk","zwembadwater","bijeenkomst","plaatselijk","evenwichtig","gezinsleden","wintersport","moeilijkheid","maatschappij","doorzichtig","knutselwerkje","bloementuin","opmerkelijk","bergbeklimmer","uitverkocht","daadwerkelijk","elektriciteit","beantwoorden","suikerklontje","wetenschapper","veelbelovend","demonstratie","duidelijkheid","kleurpotloden","geschiedenis","kleuterschool","rolschaatsen","rechtvaardig","laboratorium","werkelijkheid","zwaartekracht","eetkamertafel","bijzonderheid"]],[["na","pij","uit","met","zal","ben","tip","put","mep","sik","man","hol","vak","kop","kin","tel","nul","had","zit","en","nat","gaf","vol","tol","vin","gom","nip","stad","smal","zon","las","fel","naam","lokt","kous","zoon","mes","slak","tak","wie","lid","hand","dor","bit","lui","rol","hot","hek","hok","la","stuk","zaag","knie","wen","neus","week","ham","muur","les","worm","knop","das","pak","lot","vijf","map","mat","vat","tuin","bek","erg","pot","gal","zet","vod","rak","bot","hoe","wang","koud","bos","kan","dik","los","schip","troep","stoel","stap","wol","stok","pan","ziel","dag","dus","vuist","hom","ster","nee","zang","wet","sip","rib","vlot","wrat","zwem","hel","ren","het","hout","zij","zwak","uil","rat","hart","vork","zand","kerk","kuil","lang","leeg","wijn","muis","werk","snor","zwoel","touw","slang","taart","wind","voor","kind","reed","vijl","muts","raam","volk","spin","straat","zwart","plant","zoek","kreeg","woord","fiets","vlieg","splijt","zwaan","licht","rijst","sport"],["kopen","lopen","appel","graag","motor","laden","emmer","kamer","onder","lezen","kastje","stilte","gaatje","tussen","leraar","oranje","acteur","vorige","moeder","boter","omhoog","helder","halen","trots","puzzel","orkest","tafel","naald","lekker","tonijn","dubbel","ijsje","warmte","piraat","dromen","geluid","engel","kracht","lastig","gebouw","olifant","rennen","grijpen","middag","matroos","armband","fluiten","herfst","familie","brengen","logeren","bepaald","winkel","plezier","muurtje","uurtje","chocola","roeien","zeker","raket","rekenen","druiven","rooster","kleding","nergens","flessen","snoepje","hoogte","gezicht","keuken","kapper","schepen","lichaam","fornuis","kruiden","minder","tractor","tekenen","konijn","varken","bonzen","vriezen","deksel","hoeveel","beloven","slinger","proberen","landen","achter","pompoen","mensen","spreken","meester","telefoon","aardig","bevriend","schaap","morgen","knoppen","seconde","betalen","bewegen","melken","zwaard","vakantie","kantoor","knuffel","voetbal","vandaag","giraffe","juffrouw","parkeren","computer","woensdag","schakel","duizend","trappen","kasteel","plafond","maandag","dikwijls","theater","vlaggen","nummers","fabriek","schaduw","fontein","verhaal","oefenen","zakdoek","glimlach","jongens","kalender","vierkant","schilder","mopperen","kampioen","fietsband","bruiloft","november","fotograaf","oplossen","antwoord","zaterdag","maaltijd","beginnen","formulier","chauffeur","luisteren","stoplicht"],["wederom","bedankt","gekleurd","benieuwd","cijfers","pauzeren","macaroni","portret","opdracht","astronaut","programma","studeren","wandelpad","sneeuwpop","muziekles","sensatie","discussie","gedurende","maatbeker","inspectie","traditie","zeilboot","winterjas","eindstand","oplossing","kapsalon","kapitein","strategie","mijnheer","jaarmarkt","diepvries","werkgever","plantenbak","reisbureau","landbouwer","rugzakken","deelnemer","evenwicht","dagelijks","blijkbaar","directeur","alledaags","waterfles","generaal","regelmatig","democratie","leesboek","avondeten","behoorlijk","afgelopen","praktisch","sokkenlade","dakpannen","handdoeken","aangenaam","kenmerken","drinkwater","lesrooster","bestrijden","legpuzzel","bevolking","opgeruimd","dierenarts","kerstboom","schoolplein","realistisch","jongensboek","toekomstig","minderheid","onschuldig","verkenner","eiwitrijk","regenpijp","ambulance","gelegenheid","gebeurtenis","tuinhuisje","kranenwater","expeditie","apothekers","zwemdiploma","tafeltennis","sportschool","autosleutel","zandkasteel","ruimtevaart","verrassing","beleefdheid","krantenwijk","kunstgebit","instrument","postzegels","verzamelaar","paardenstal","ongeduldig","gevaarlijk","bemoedigend","monumentaal","woordenboek","boekenkast","oliebollen","verfrissend","overheerlijk","hoogspanning","opblaasboot","drogisterij","bestelling","slaapkamer","schaakbord","rioolwater","schoolreisje","bibliotheek","volwassenen","vertrekken","verlegenheid","ongelukkig","universiteit","controleren","gezelligheid","engelachtig","voorspelling","mededelingen","schitterend","ontwikkeling","beschrijven","eigenaardig","rekenmachine","onmiddellijk","vaardigheid","uitnodiging","keukenkastje","aanwezigheid","alarmnummer","eerlijkheid","probleemloos","overstroming","bijvoorbeeld","concurrentie","schoonmaker","merkwaardig","boterhamdoos","brandweerman","slagroomtaart","politieagent","dierenverhaal","ontbijttafel","aanvankelijk","brandblusser","jubileumfeest","nationaliteit"]],[["es","la","os","bij","uur","kus","vin","rok","hel","bot","wel","bad","kap","mof","of","pit","lap","jas","nu","dof","hap","om","kan","bes","mol","wet","gal","jou","zet","pan","vlam","vaag","wie","het","oor","muts","vos","dit","ram","muur","neus","kok","rug","ster","ren","vlag","zie","las","nee","gaf","zoen","vijf","koek","vel","rek","tol","val","klas","saus","vol","roet","hip","dan","slot","wen","room","ziel","vaak","stem","keer","wang","nat","lach","zoet","gek","duim","stil","worm","pil","hol","sip","dor","kerk","zoek","kei","huis","zij","wind","hom","dop","week","tip","mond","uit","zwart","pak","stop","vlug","som","blad","touw","dak","trein","man","spoor","pas","kou","sok","staf","dol","zon","stap","top","pij","taart","muis","dal","zwaan","sport","snor","voor","pret","vier","kous","regen","mouw","steen","stok","vlieg","plak","knop","plan","rood","tent","lokt","melk","klok","vraag","zwak","vork","jurk","zwem","stad","tros","volk","strik","schip","licht","slaap","slang"],["engel","jaren","haven","geven","lepel","staan","motor","gaatje","hemel","geduld","stilte","rivier","tafel","laden","lekker","dokter","gebouw","foto","tunnel","koffie","kussen","markt","vreemd","melken","negen","ijsje","kanten","beker","balkon","zebra","ruiter","wereld","zwaluw","werken","kameel","zwaard","rondom","oceaan","slimme","spelen","praten","suiker","kantoor","straten","wolken","vriezen","begrip","vijver","waarom","vorige","grijpen","ochtend","zondag","donker","kamer","passen","muziek","lezen","wortel","snoepje","mooiste","pauze","vallen","feestje","haastig","pyjama","schakel","lichaam","bloemen","vlinder","mandje","knuffel","fluiten","slinger","dapper","bureau","niemand","breken","pedaal","stoppen","brengen","helder","klusjes","alleen","almaar","kasteel","indruk","warmte","eventjes","vechten","leggen","dansen","koning","gordijn","hangmat","wapens","cirkel","liedje","bladeren","hoogte","kabouter","daarom","kleding","zingen","bouwen","zaterdag","spiegel","sandalen","kanaal","giraffe","minuten","dinsdag","nergens","fornuis","grappig","kwartier","stropdas","kookboek","ketting","voorbij","student","brieven","oefening","planeet","signaal","prachtig","trommel","schudden","fabriek","opruimen","vriendin","tevreden","gezellig","regenboog","racefiets","fotograaf","verjaardag","dwarsfluit","kerstmis","schommel","kampioen","rekening","bevriend","pannenkoek","speeltuin","edelsteen","sinaasappel","restaurant","natuurlijk","vrachtwagen"],["perfect","wederom","eveneens","zeilboot","portret","drukwerk","leesboek","studeren","generaal","traditie","bedankt","onderweg","voordeur","bezoeker","publiek","melkboer","kostbaar","dankbaar","mijnheer","verwacht","klimrek","regenpijp","dakpannen","prikbord","lampenkap","vanavond","melodieus","expeditie","kwaliteit","incident","gekleurd","waterfles","kapsalon","rechtsaf","kaartspel","spontaan","prestatie","lawaaierig","stemming","bosbessen","verrassing","sensatie","statistiek","ongeduldig","ongelukkig","verfkwast","verkenner","feestdagen","huisvuil","pauzeren","legpuzzel","markttafel","schoolbord","dorpsplein","bevolking","vliegveld","afgelopen","verbinding","decoratie","klaslokaal","voorlezen","achtertuin","vervelend","medicijnen","informatie","oplossing","rioolwater","sportschool","tropische","discussie","diepvries","schaakbord","identiteit","vrachtauto","mondeling","bestelling","vuilnisman","weekendje","werkgever","aangenaam","frambozen","uitverkocht","gedachtenis","onschuldig","merkwaardig","camouflage","drogisterij","luchthaven","kunstgebit","trampoline","voetgangers","ruimschoots","verandering","gemakkelijk","postzegels","boekhandel","waterballon","fruitsalade","autosleutel","handdoeken","buitengewoon","herinnering","belachelijk","kranenwater","gelegenheid","hulpmiddel","boterbloem","onmiddellijk","badkamerdeur","vaardigheid","tijdschrift","gymnastiek","verzamelen","avontuurlijk","laboratorium","meesterwerk","zelfstandig","wasknijpers","paardenstal","groentesoep","basisschool","rechtvaardig","beantwoorden","beschrijven","alarmnummer","dierenverhaal","veelbelovend","rolschaatsen","spectaculair","krantenwijk","vrijwilliger","hulpverlener","geschiedenis","doorzichtig","schitterend","lachwekkend","kleinkinderen","overheerlijk","bergbeklimmer","ontwikkeling","verlegenheid","verkeersbord","suikerklontje","achtervolging","noodzakelijk","aanvankelijk","speelkaarten","raadselachtig","verkeerslicht","kleurpotloden"]],[["zak","rad","rij","ei","tut","van","vet","koe","sap","hik","als","nul","map","bos","les","bon","zit","nek","zee","bom","rol","bek","bus","bol","net","wol","hem","rat","mok","aan","en","uil","zin","ham","hoe","wit","ben","hop","mep","pot","tas","mik","jij","tel","ruim","nest","zes","neef","gif","bil","gul","put","kar","reed","zeep","dun","werk","vis","hek","kas","kist","lijm","dag","hoed","zoon","lid","elk","mes","mak","dik","rap","trek","dus","kop","vat","kind","mos","mag","weg","leeg","vent","rust","land","krom","kuil","hak","lot","snel","eet","lust","maan","kaas","bal","trap","gras","mij","jong","hok","tand","klein","mis","lat","lam","vijl","ten","tuin","oog","lief","stuk","mees","bril","oom","veer","spel","rak","zaal","vaart","tijd","kreeg","rots","tras","leer","vrij","fiets","leeuw","dorp","troep","vloer","zeil","ziek","wiel","raak","knie","smal","weer","verf","vuur","list","vogel","groen","nooit","staart","vuist","rijst","stuur","paard","sneeuw","kleur","kraan","water"],["parel","oogst","adres","bijna","appel","negen","kramp","oven","nacht","mogen","vader","levend","oranje","plekje","ridder","geduld","geven","lachen","passen","dokter","uurtje","minder","arbeid","kleine","toren","onder","mensen","balkon","sokken","koper","nieuw","clown","knoppen","niemand","aardbei","woorden","rennen","ringen","metaal","middag","aardig","wereld","lastig","banaan","vragen","zingen","radio","bureau","dubbel","bezem","strand","piraat","maandag","naaien","sporten","paarden","ladder","wijzen","kijken","modder","bewegen","flessen","heuvel","muurtje","slapen","dolfijn","letters","roeien","loterij","signaal","omhoog","wachten","pompoen","cadeau","schepen","tussen","landen","mooiste","tijdens","fontein","nummer","pinguin","schaap","hoeveel","morgen","kapper","woensdag","papier","spelen","buiten","herfst","kastje","dromen","weleens","kracht","bordspel","schommel","tennis","acteur","familie","lichtjes","trommel","oefenen","geluid","seconde","dikwijls","praten","tevreden","paraplu","duizend","spiegel","student","verhaal","plafond","soldaat","beloven","jongens","spreken","bakfiets","melodie","formulier","stoeien","plaatje","laatste","gelukkig","weekend","meester","mopperen","heerlijk","bruiloft","rekenen","vliegtuig","vrolijk","ontbijt","chocola","kruiden","nummers","scheuren","landkaart","eventjes","bladeren","schoenen","stropdas","kwartier","chauffeur","bijzonder","schrijven","eindelijk","handschoen","natuurlijk"],["nadruk","machtig","kapitein","optreden","neerslag","bewaken","symbool","dagboek","opdracht","vermaak","vuurtoren","praktisch","doelpunt","winterjas","weekendje","dagelijks","spannend","onderzoek","supporter","sneeuwpop","beginners","notenboom","eindstand","directeur","mondeling","bloemkool","kerstboom","vloeistof","televisie","drukwerk","jaarmarkt","plantsoen","kenmerken","tweeling","benieuwd","architect","binnenstad","reisbureau","rijstpap","oefenboek","afspraakje","aanwijzing","ongeveer","tekenfilm","moeizaam","verlaten","kunstenaar","behoorlijk","gehoorzaam","woonkamer","haardvuur","doorlopend","belangrijk","pantoffels","blijkbaar","eiwitrijk","gasfornuis","professor","toekomstig","landbouwer","vliegveld","maatbeker","bouwvakker","programma","motorfiets","stofzuiger","vertrekken","kookboeken","gezinsleden","verdwijnen","democratie","bestrijden","gereedschap","melkpakken","oliebollen","kruidenier","bijeenkomst","hotelkamer","ambulance","uitrusting","eerlijkheid","tuinhuisje","wintersport","ingewikkeld","bromfiets","wandelpad","gevaarlijk","regelmatig","anderhalve","controleren","verfrissend","wasknijpers","dorpsplein","plantenbak","zandkasteel","sokkenlade","gebeurtenis","onverwacht","gemeenschap","koninkrijk","raamkozijn","schaatsbaan","geheimzinnig","opblaasboot","vlaggenmast","scheikunde","concurrentie","nieuwsbrief","aanwezigheid","ontbijttafel","hulpverlener","opmerkelijk","conducteur","realistisch","tafeltennis","landkaarten","evenwichtig","fruitschaal","moeilijkheid","schoolplein","voorzichtig","mededelingen","burgemeester","dubbeldekker","stoelendans","jongensboek","gezelligheid","duidelijkheid","bijzonderheid","verzamelaar","daadwerkelijk","woordenboek","eetkamertafel","bibliotheek","kleuterschool","schoolreisje","demonstratie","zwembadwater","probleemloos","nationaliteit","handtekening","samenwerking","zwaartekracht","jaargetijden","universiteit","slagroomtaart","knutselwerkje","werkelijkheid","jubileumfeest","wetenschapper"]],[["al","os","hen","hel","wen","vak","ven","wet","pak","fit","lap","kou","vol","hot","lui","oom","op","nek","kip","lip","hal","ten","wit","tut","rap","bij","tak","uil","dol","had","kom","val","hem","dan","zon","pij","zet","melk","trek","sap","bak","hok","muts","wie","pit","hout","los","nu","bek","zuur","na","ster","bed","brug","nat","pet","volk","zaal","kuil","rest","zang","zoek","zoon","lot","mes","zal","man","mik","gal","knie","mis","dak","merk","elk","lid","nip","slak","mees","gul","bit","maak","gom","dun","das","gum","zout","vlot","tel","wat","vijf","gel","dorp","worm","ruim","vlug","kin","lang","vijl","koek","huis","wrat","ton","tik","hij","zit","wiel","kam","klein","fel","kop","kan","mat","gat","rood","krom","vlak","snor","spoor","poes","zaag","kleur","hart","strik","zwart","lach","spin","soep","ziel","stof","tijd","stad","staart","zwoel","koud","zeep","neef","film","kraan","vuil","straat","kloof","stoel","trein","lucht","vlees","kaart","zomer","steen","vlieg","splijt"],["lopen","raket","emmer","graag","trots","kopen","auto","avond","lenen","ruzie","keuken","beker","suiker","zeggen","helpen","robot","koffie","moeder","binnen","boter","bonzen","leggen","afval","halen","eigen","breken","zoveel","beroep","puzzel","orkest","tonijn","pakket","zebra","bocht","manier","fruit","tomaat","naald","potlood","bloemen","tulpen","armband","markt","achter","dorpen","rijden","blijven","zeker","olifant","rooster","vallen","honger","eenden","sleutel","veilig","konijn","rijkdom","haastig","merken","muziek","bagage","hangmat","kaarsen","pyjama","vandaag","reizen","rommel","schaduw","deksel","daarom","leraar","betalen","baasje","computer","uitleg","zakdoek","theater","vlaggen","november","meisje","voetbal","varken","schilder","bepaald","druiven","machine","bakker","liefde","plakken","matroos","broeder","telefoon","antwoord","winkel","collega","raadsel","kameel","karton","verkeer","leerling","doorgaan","dichtbij","groente","buurman","eerlijk","branden","logeren","wandelen","plezier","brommer","kinderen","beginnen","klimmen","vrienden","tekenen","zwemmen","glimlach","trappen","planeet","briefje","vergeten","vermoeid","parkeren","mandarijn","noorden","edelsteen","gezicht","speciaal","strijden","kabouter","luisteren","maaltijd","bedelaar","kalender","kookboek","kerstmis","hoorbaar","oplossen","stoplicht","hardlopen","vierkant","fietsband","makkelijk","vakantie","huisdier","juffrouw","kunstwerk","buurvrouw","verjaardag","vrachtwagen"],["orgaan","nuttig","wederom","cijfers","publiek","vermaak","stemming","onderweg","gratis","bezoeker","ijscoman","huisvuil","macaroni","bakkerij","filmster","mislukt","verstopt","symbool","helemaal","atletiek","evenwicht","muzikaal","bewaken","gedurende","ambulance","mobieltje","apparaat","incident","rugzakken","opgeruimd","lampenkap","strategie","astronaut","tropische","verhuizen","eenvoudig","prikbord","spaghetti","kaasschaaf","wijsheid","boekenkast","alledaags","informatie","vervelend","lesrooster","koekenpan","rioolwater","omgeving","parlement","kamerplant","avondeten","brievenbus","scheikunde","statistiek","drinkwater","landbouwer","onverwacht","bestelling","brandstof","vaatwasser","gezondheid","huishouden","voorzichtig","natuurkunde","muziekles","bekendheid","ontmoeten","verandering","instrument","zwemdiploma","engelachtig","aansluiten","minderheid","schoonmaker","misverstand","slaapkamer","deelnemer","alternatief","inspectie","volwassenen","apothekers","wasknijpers","monumentaal","eindexamen","grasmaaier","toneelstuk","sinterklaas","kinderwagen","lachwekkend","gedachtenis","fotografie","terugkeren","beleefdheid","ruimtevaart","dierenarts","bemoedigend","knuffelbeer","hulpverlener","rekenmachine","bloementuin","stoelendans","belangrijk","ontbijttafel","evenwichtig","brandweerman","aandachtig","ongeduldig","interessant","bijvoorbeeld","kranenwater","realistisch","jongensboek","boterhamdoos","keukenkastje","eigenaardig","overstroming","brandblusser","bureaustoel","persoonlijk","hobbelpaard","broodtrommel","schaatsbaan","aardappelen","gelegenheid","grootmoeder","uitnodiging","postkantoor","avontuurlijk","klokkenluider","wetenschapper","autosleutel","plaatselijk","wintersport","kantoorgebouw","stratenmaker","hoogspanning","nieuwsgierig","spectaculair","veelbelovend","leeuwentemmer","maatschappij","elektriciteit","buitengewoon","politieagent","tandenborstel","werkelijkheid","overheerlijk","zwaartekracht","voorspelling","uitzonderlijk"]],[["na","vis","es","net","vos","kip","das","gek","rij","som","hol","gaf","erg","dik","bit","dor","of","sok","vin","rad","pil","rug","tas","kar","kin","rol","hop","la","nul","kus","jij","bed","tand","kom","gat","lang","list","weg","raam","map","uit","neus","jou","muis","soep","lam","wat","bril","ton","leeg","hik","zes","mos","merk","hoe","hek","zwem","dof","en","rok","zand","oog","rak","rots","lust","top","vod","dal","uur","hak","mouw","mol","ven","zwak","tent","touw","zie","naam","mok","werk","tol","ben","trap","bol","klok","gif","ham","mak","mag","tuin","rek","met","bos","stuur","lokt","rust","zal","bad","wol","vogel","dag","tras","bal","lui","slot","jurk","hij","stop","eet","vet","aan","zin","bes","hart","raak","maan","muur","water","kind","kous","jong","nooit","slak","troep","plant","lief","kaart","vraag","snel","vlam","lijm","zwaan","hand","staf","saus","keer","kerk","kist","koud","zaag","stem","wrat","zomer","taart","rijst","kloof","vloer","vuist","straat","vaart"],["auto","avond","clown","halen","jaren","kamer","kopen","nacht","kramp","winkel","kussen","konijn","daarom","honger","gebouw","passen","varken","bocht","dapper","boter","praten","morgen","herfst","alleen","kijken","binnen","minder","dromen","hemel","bureau","poesje","toren","naaien","beroep","mandje","almaar","zeker","pauze","brommer","vrolijk","letters","aardbei","vriezen","geluid","wijzen","gaatje","plafond","meisje","oogst","wereld","hoogte","knuffel","engel","cadeau","middag","slapen","strand","geven","leggen","nummers","fornuis","reizen","rivier","voetbal","branden","trappen","woorden","mooiste","ochtend","schakel","spreken","bouwen","buiten","maandag","signaal","rijden","gelukkig","warmte","banaan","lastig","gezicht","achter","doorgaan","vreemd","strijden","rijkdom","woensdag","keuken","bagage","chocola","bloemen","ontbijt","straten","kasteel","tractor","kleine","machine","broertje","sleutel","armband","tevreden","sandalen","schepen","niemand","schommel","betalen","voorbij","bewegen","maaltijd","ketting","noorden","grappig","prachtig","kaarsen","olifant","zakdoek","telefoon","student","fontein","feestje","mopperen","trommel","parkeren","slinger","zwemmen","edelsteen","makkelijk","flessen","juffrouw","klusjes","matroos","antwoord","proberen","speciaal","potlood","oefenen","knoppen","nergens","wachten","mandarijn","beginnen","vierkant","schudden","bruiloft","fotograaf","restaurant","grootvader","gebruiken","stoplicht","sinaasappel"],["portret","dagboek","klimrek","machtig","nuttig","cijfers","helemaal","mislukt","spontaan","vanavond","verlaten","tweeling","tekenfilm","prestatie","mondeling","aangenaam","avondeten","beginners","bakkerij","vloeistof","ijscoman","brandstof","kapitein","evenwicht","maatbeker","moeizaam","strategie","sensatie","gekleurd","bloemkool","boekenkast","kwaliteit","spannend","bouwvakker","binnenstad","afgelopen","brievenbus","raamkozijn","haardvuur","frambozen","verwacht","bekendheid","conducteur","weekendje","kaartspel","reisbureau","vuurtoren","neerslag","dagelijks","blijkbaar","prikbord","filmster","architect","aanwijzing","fotografie","medicijnen","verrassing","verdwijnen","verzamelen","sokkenlade","dierenarts","diepvries","notenboom","astronaut","postzegels","professor","gasfornuis","identiteit","alledaags","koninkrijk","woonkamer","werkgever","winterjas","doorlopend","zelfstandig","camouflage","legpuzzel","opblaasboot","gezinsleden","nieuwsbrief","melodieus","gymnastiek","opmerkelijk","mobieltje","spaghetti","televisie","praktisch","schaakbord","hobbelpaard","toekomstig","basisschool","bijeenkomst","lawaaierig","doorzichtig","slaapkamer","kaasschaaf","vlaggenmast","schoonmaker","vrachtauto","boekhandel","paardenstal","controleren","interessant","plantenbak","motorfiets","rekenmachine","bureaustoel","beantwoorden","bemoedigend","misverstand","verzamelaar","geheimzinnig","probleemloos","plaatselijk","badkamerdeur","vertrekken","anderhalve","boterbloem","gemeenschap","moeilijkheid","verfrissend","onmiddellijk","overstroming","uitnodiging","buitengewoon","schoolreisje","postkantoor","schitterend","verkeersbord","speelkaarten","alarmnummer","tandenborstel","persoonlijk","fruitschaal","meesterwerk","nationaliteit","hoogspanning","dubbeldekker","leeuwentemmer","kleurpotloden","elektriciteit","handtekening","geschiedenis","bijvoorbeeld","vrijwilliger","kleinkinderen","klokkenluider","daadwerkelijk","slagroomtaart","knutselwerkje"]],[["al","es","sip","vol","koe","van","les","het","pot","ei","om","sik","als","op","mol","hop","tip","kok","dop","rak","mok","mak","zes","zij","oor","kap","mat","zee","lid","mof","plak","bom","bos","hip","hart","vat","smal","vrij","bril","vuur","las","gom","ren","dus","wang","los","film","pas","nee","gum","bad","rest","vork","leer","zoet","pret","kam","stok","zuur","hel","knie","rat","zeil","lat","vel","hoed","put","knop","zoen","bus","ram","stap","hen","week","jas","rib","room","hap","zaag","hand","zak","hom","mij","bal","leeuw","hij","gras","bot","wel","stuk","kaas","vaag","weer","map","pan","bak","vak","bon","tros","dit","wind","poes","klas","nest","hol","bil","vaak","leeg","woord","trein","kei","kas","mep","vlees","vent","regen","brug","stop","mond","vier","plan","licht","reed","maak","wijn","verf","zwem","hout","roet","kuil","land","duim","sport","blad","veer","sneeuw","vlag","spel","voor","slang","ziek","fiets","stil","kreeg","splijt","zwoel","slaap","paard","schip","groen"],["staan","motor","lezen","lenen","emmer","graag","fruit","laden","robot","tonijn","veilig","zingen","adres","bijna","afval","appel","tennis","puzzel","spelen","dorpen","vorige","cirkel","tussen","werken","leraar","foto","mensen","zondag","slimme","oceaan","parel","pedaal","wortel","tunnel","tafel","radio","koper","deksel","papier","ringen","bakker","tomaat","liefde","dubbel","dansen","klimmen","paraplu","stoeien","kapper","blijven","brengen","levend","collega","helder","piraat","pyjama","paarden","ladder","kastje","kussen","sporten","oranje","waarom","dokter","kleding","beloven","tekenen","orkest","stilte","verkeer","donker","nummer","helpen","pompoen","karton","plaatje","sokken","vandaag","rommel","uurtje","theater","computer","druiven","baasje","pakket","muziek","raadsel","merken","vragen","vriendin","vakantie","bevriend","schilder","hangmat","bakfiets","plakken","vlinder","zwaluw","plekje","minuten","fabriek","moeder","rooster","ruiter","rennen","glimlach","voorbij","kabouter","rekenen","haastig","dolfijn","meester","logeren","melodie","fluiten","kampioen","lichtjes","vlaggen","stoppen","dichtbij","kinderen","oplossen","huisdier","vergeten","weleens","hoeveel","muurtje","grijpen","racefiets","jongens","bordspel","brieven","leerling","rekening","schoenen","gebruiken","kunstwerk","kalender","scheuren","regenboog","vrienden","hardlopen","schrijven","eindelijk","dwarsfluit","vliegtuig","handschoen","natuurlijk","verjaardag","grootvader"],["nadruk","perfect","orgaan","pauzeren","studeren","drukwerk","leesboek","muzikaal","traditie","rechtsaf","voordeur","benieuwd","bedankt","doelpunt","apparaat","rijstpap","supporter","waterfles","kapsalon","vliegveld","wandelpad","opdracht","bromfiets","ongeveer","mijnheer","eindstand","zeilboot","discussie","directeur","macaroni","generaal","melkboer","gedurende","verkenner","opgeruimd","decoratie","omgeving","feestdagen","behoorlijk","kookboeken","huishouden","toneelstuk","afspraakje","stofzuiger","inspectie","deelnemer","dorpsplein","wijsheid","muziekles","vuilnisman","eindexamen","democratie","luchthaven","eiwitrijk","melkpakken","eenvoudig","gezondheid","hotelkamer","verbinding","gehoorzaam","oefenboek","programma","voorlezen","jaarmarkt","gebeurtenis","schoolplein","minderheid","uitverkocht","vaardigheid","hulpmiddel","plantsoen","lesrooster","kruidenier","ingewikkeld","kamerplant","klaslokaal","woordenboek","bestrijden","ongelukkig","bosbessen","tijdschrift","alternatief","bibliotheek","apothekers","gevaarlijk","terugkeren","merkwaardig","oplossing","krantenwijk","bevolking","eigenaardig","achtertuin","voetgangers","markttafel","kunstenaar","ruimtevaart","aandachtig","oliebollen","aardappelen","handdoeken","regelmatig","demonstratie","avontuurlijk","onschuldig","fruitsalade","uitrusting","schoolbord","instrument","trampoline","kinderwagen","tuinhuisje","brandweerman","eerlijkheid","samenwerking","lachwekkend","beschrijven","grootmoeder","rechtvaardig","groentesoep","aanwezigheid","belachelijk","waterballon","zwembadwater","verlegenheid","laboratorium","drogisterij","natuurkunde","universiteit","gemakkelijk","sinterklaas","zwemdiploma","duidelijkheid","keukenkastje","raadselachtig","boterhamdoos","maatschappij","gezelligheid","nieuwsgierig","stratenmaker","politieagent","aanvankelijk","kleuterschool","ontwikkeling","eetkamertafel","dierenverhaal","suikerklontje","bijzonderheid","jubileumfeest","achtervolging","bergbeklimmer"]]];
+const KEY = 'dmt-hamza-v1';
+const TIME = 60;
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+
+/* ---------------- i18n ---------------- */
+const T = {
+nl: {
+  appTitle:'DMT Trainer', sub:'Hamza · Groep 7',
+  tabPractice:'Oefenen', tabProgress:'Resultaten', tabTips:'Tips',
+  hello:'Hoi Hamza!', helloSub:'Lees zo snel en zo goed mogelijk. Elke kaart duurt precies 1 minuut.',
+  rec:'Aanbevolen: Toets {e} · Kaart {c}',
+  chipTries:'kaarten gelezen', chipBest:'beste score', chipStreak:'dagen op rij',
+  pickExam:'Kies een toets', pickCard:'Kies een kaart',
+  lvl1:'Makkelijk', lvl2:'Gemiddeld', lvl3:'Moeilijk',
+  card:'Kaart', exam:'Toets', best:'Beste', last:'Laatste', avg:'Gemiddeld', tries:'Keer', words:'woorden', thisExam:'Toets {e}',
+  start:'Start', back:'Terug',
+  ready:'Klaar om te lezen?',
+  readyHint:'Lees hardop, van links naar rechts, rij voor rij. Tik tijdens het lezen op het woord waar je bent.',
+  go:'Start de timer',
+  hintRun:'Lezen maar! Tik op het woord waar je nu bent.',
+  hintLast:'Tijd is om! Tik op het laatste woord dat Hamza goed of fout las.',
+  hintErr:'Tik nu op de woorden die fout waren (overgeslagen of verkeerd gelezen). Tik nog eens om te herstellen.',
+  segLast:'1. Laatste woord', segErr:'2. Fouten', finish:'Klaar',
+  reached:'Gelezen', errors:'Fouten', correct:'Goed', accuracy:'Nauwkeurig',
+  resultTitle:'Goed gedaan!', unit:'woorden goed in 1 minuut',
+  s1:'Elke kaart maakt je sterker. Morgen weer!', s2:'Mooi gelezen! Blijf zo doorgaan.', s3:'Wauw, een nieuw record!',
+  first:'Eerste resultaat voor dit niveau staat. Nu kun je jezelf verslaan!',
+  newBest:'Nieuw record voor dit niveau!',
+  vsLast:'{d} woorden t.o.v. vorige keer', same:'Gelijk aan vorige keer',
+  examTotal:'Totaal Toets {e}: {n} woorden',
+  again:'Nog een keer', nextCard:'Volgende aanbevolen kaart', close:'Sluiten',
+  confirmQuit:'Stoppen? Deze poging telt dan niet mee.',
+  progressTitle:'Mijn voortgang', goal:'Doel', trend:'Score per poging', noTrend:'Lees minstens 2 kaarten om je lijn te zien.',
+  examTotals:'Overzicht per toets', total:'Totaal',
+  totalNote:'Op school worden de goede woorden van de drie kaarten meestal bij elkaar opgeteld. Dit totaal is oefenmateriaal en geeft geen officieel niveau.',
+  history:'Geschiedenis', empty:'Nog geen resultaten. Lees je eerste kaart!',
+  clearAll:'Alles wissen', confirmClear:'Alle resultaten wissen? Dit kan niet ongedaan worden gemaakt.', exportCsv:'Exporteer CSV',
+  localNote:'Resultaten blijven alleen in deze browser op dit apparaat.',
+  tipsTitle:'Zo word je een snelle lezer', howTitle:'Zo werkt het',
+  tips:[
+    'Lees in stukjes. Kijk naar het hele woord en niet letter voor letter.',
+    'Kijk al naar het volgende woord terwijl je het huidige woord zegt.',
+    'Geen vinger of potlood gebruiken: de ogen doen het werk. Lees hardop en vlot.',
+    'Een lastig woord? Splits het in klankgroepen (ver-jaar-dags-kaart) en ga meteen door.',
+    'Oefen kort en vaak: 2 toetsen per week en elke dag 10 minuten hardop lezen.',
+    'Zit rustig, met goed licht en zonder afleiding. Dan lees je het snelst.',
+    'Controleer je voortgang met de echte DMT van school (M7 en E7). Dit hier is oefenmateriaal.'
+  ],
+  how:[
+    'Kies een toets (1 t/m 10) en een kaart. Kaart 1 is makkelijk, kaart 3 is het moeilijkst.',
+    'Druk op Start. Na het aftellen heb je 1 minuut om hardop te lezen.',
+    'Een ouder of leraar tikt na afloop op het laatste gelezen woord en markeert de fouten.',
+    'Score = gelezen woorden min fouten. Probeer elke keer je eigen record te verbeteren.'
+  ]
+},
+en: {
+  appTitle:'DMT Trainer', sub:'Hamza · Group 7',
+  tabPractice:'Practice', tabProgress:'Progress', tabTips:'Tips',
+  hello:'Hi Hamza!', helloSub:'Read as fast and as accurately as you can. Every card takes exactly 1 minute.',
+  rec:'Recommended: Test {e} · Card {c}',
+  chipTries:'cards read', chipBest:'best score', chipStreak:'day streak',
+  pickExam:'Pick a test', pickCard:'Pick a card',
+  lvl1:'Easy', lvl2:'Medium', lvl3:'Hard',
+  card:'Card', exam:'Test', best:'Best', last:'Last', avg:'Average', tries:'Tries', words:'words', thisExam:'Test {e}',
+  start:'Start', back:'Back',
+  ready:'Ready to read?',
+  readyHint:'Read aloud, left to right, row by row. While reading, tap the word you are at.',
+  go:'Start the timer',
+  hintRun:'Go! Tap the word you are at now.',
+  hintLast:'Time is up! Tap the last word Hamza read, right or wrong.',
+  hintErr:'Now tap the words that were wrong (skipped or misread). Tap again to undo.',
+  segLast:'1. Last word', segErr:'2. Mistakes', finish:'Done',
+  reached:'Read', errors:'Mistakes', correct:'Correct', accuracy:'Accuracy',
+  resultTitle:'Well done!', unit:'correct words in 1 minute',
+  s1:'Every card makes you stronger. Again tomorrow!', s2:'Nicely read! Keep it up.', s3:'Wow, a new record!',
+  first:'First result for this level is in. Now you can beat yourself!',
+  newBest:'New record for this level!',
+  vsLast:'{d} words vs last time', same:'Same as last time',
+  examTotal:'Test {e} total: {n} words',
+  again:'Once more', nextCard:'Next recommended card', close:'Close',
+  confirmQuit:'Stop? This attempt will not be saved.',
+  progressTitle:'My progress', goal:'Goal', trend:'Score per attempt', noTrend:'Read at least 2 cards to see your line.',
+  examTotals:'Overview per test', total:'Total',
+  totalNote:'At school the correct words of the three cards are usually added together. This total is practice material and not an official level.',
+  history:'History', empty:'No results yet. Read your first card!',
+  clearAll:'Clear all', confirmClear:'Clear all results? This cannot be undone.', exportCsv:'Export CSV',
+  localNote:'Results stay in this browser on this device only.',
+  tipsTitle:'How to become a fast reader', howTitle:'How it works',
+  tips:[
+    'Read in chunks. Look at the whole word, not letter by letter.',
+    'Look ahead to the next word while you say the current one.',
+    'No finger or pencil: let your eyes do the work. Read aloud and smoothly.',
+    'A tricky word? Split it into sound groups (ver-jaar-dags-kaart) and keep going.',
+    'Practise short and often: 2 tests a week and 10 minutes of reading aloud every day.',
+    'Sit calmly, with good light and no distractions. That is when you read fastest.',
+    'Check your progress with the real school DMT (M7 and E7). This is practice material.'
+  ],
+  how:[
+    'Pick a test (1 to 10) and a card. Card 1 is easy, card 3 is the hardest.',
+    'Press Start. After the countdown you have 1 minute to read aloud.',
+    'A parent or teacher taps the last word read afterwards and marks the mistakes.',
+    'Score = words read minus mistakes. Try to beat your own record every time.'
+  ]
+}};
+
+/* ---------------- storage ---------------- */
+const load = () => {
+  try { const j = JSON.parse(localStorage.getItem(KEY)); if (j && Array.isArray(j.history)) return j; } catch (e) {}
+  return { history: [], goals: {}, lang: 'nl' };
+};
+let store = load();
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} };
+let lang = store.lang === 'en' ? 'en' : 'nl';
+const t = (k, o = {}) => {
+  let s = (T[lang][k] !== undefined ? T[lang][k] : (T.nl[k] !== undefined ? T.nl[k] : k));
+  for (const x in o) s = String(s).split('{' + x + '}').join(o[x]);
+  return s;
+};
+
+/* ---------------- stats helpers ---------------- */
+const hist = c => store.history.filter(x => x.c === c);
+const bestFor = c => hist(c).reduce((m, x) => Math.max(m, x.correct), 0);
+const lastIn = (e, c) => { const h = store.history.filter(x => x.e === e && x.c === c); return h.length ? h[h.length - 1] : null; };
+const dayKey = d => { d = new Date(d); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); };
+const streak = () => {
+  const days = new Set(store.history.map(x => dayKey(x.ts)));
+  let n = 0; const d = new Date();
+  if (!days.has(dayKey(d))) d.setDate(d.getDate() - 1);
+  while (days.has(dayKey(d))) { n++; d.setDate(d.getDate() - 1); }
+  return n;
+};
+const recommend = () => {
+  for (let e = 1; e <= 10; e++) for (let c = 1; c <= 3; c++) if (!lastIn(e, c)) return { e, c };
+  let pick = { e: 1, c: 1 }, oldest = Infinity;
+  for (let e = 1; e <= 10; e++) for (let c = 1; c <= 3; c++) { const l = lastIn(e, c); if (l.ts < oldest) { oldest = l.ts; pick = { e, c }; } }
+  return pick;
+};
+const fmtDate = ts => new Date(ts).toLocaleString(lang === 'nl' ? 'nl-NL' : 'en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+const col = c => 'var(--c' + c + ')';
+
+/* ---------------- render: practice ---------------- */
+let selExam = recommend().e;
+
+function renderPractice() {
+  const h = store.history;
+  $('#chipTries').textContent = h.length;
+  $('#chipBest').textContent = h.reduce((m, x) => Math.max(m, x.correct), 0);
+  const s = streak();
+  $('#chipStreak').textContent = s; $('#streakN').textContent = s;
+  const rec = recommend();
+  const rb = $('#recBtn'); rb.textContent = t('rec', rec); rb.onclick = () => openStage(rec.e, rec.c);
+
+  $('#examPills').innerHTML = Array.from({ length: 10 }, (_, i) => {
+    const e = i + 1;
+    return `<button class="pill${e === selExam ? ' on' : ''}" data-exam="${e}" aria-pressed="${e === selExam}">
+      <small>${t('exam')}</small><span class="n">${e}</span>
+      <span class="dots">${[1, 2, 3].map(c => `<i class="d${c}${lastIn(e, c) ? ' done' : ''}"></i>`).join('')}</span></button>`;
+  }).join('');
+
+  $('#cardTiles').innerHTML = [1, 2, 3].map(c => {
+    const l = lastIn(selExam, c), b = bestFor(c);
+    return `<article class="tile glass c${c}">
+      <div class="tile-top"><span class="badge">${t('card')} ${c}</span><span class="lvl">${t('lvl' + c)}</span></div>
+      <div class="bars">${[1, 2, 3].map(k => `<i class="${k <= c ? 'f' : ''}"></i>`).join('')}</div>
+      <div class="tile-stats">
+        <div><small>${t('best')}</small><b>${b || '–'}</b></div>
+        <div><small>${t('thisExam', { e: selExam })}</small><b>${l ? l.correct : '–'}</b></div>
+      </div>
+      <button class="btn" data-start="${c}">${t('start')} ${t('card')} ${c}</button>
+    </article>`;
+  }).join('');
+}
+
+/* ---------------- render: progress ---------------- */
+function renderProgress() {
+  $('#statCards').innerHTML = [1, 2, 3].map(c => {
+    const hs = hist(c), n = hs.length, best = bestFor(c);
+    const last = n ? hs[n - 1].correct : '–';
+    const avg = n ? Math.round(hs.reduce((a, x) => a + x.correct, 0) / n) : '–';
+    const goal = +store.goals[c] || 0;
+    const pct = goal ? Math.min(100, Math.round(best / goal * 100)) : 0;
+    return `<article class="stat glass c${c}">
+      <h4>${t('card')} ${c} · ${t('lvl' + c)}</h4>
+      <div class="row4">
+        <div><b>${best || '–'}</b><small>${t('best')}</small></div>
+        <div><b>${last}</b><small>${t('last')}</small></div>
+        <div><b>${avg}</b><small>${t('avg')}</small></div>
+        <div><b>${n}</b><small>${t('tries')}</small></div>
+      </div>
+      <div class="goal"><label for="g${c}">${t('goal')}</label>
+        <input id="g${c}" type="number" inputmode="numeric" min="0" max="150" placeholder="–" value="${goal || ''}" data-goal="${c}">
+        <span>${t('words')}</span></div>
+      <div class="meter"><i style="width:${pct}%"></i></div>
+    </article>`;
+  }).join('');
+
+  renderChart();
+
+  let rows = `<tr><th>${t('exam')}</th>${[1, 2, 3].map(c => `<th>${t('card')} ${c}</th>`).join('')}<th>${t('total')}</th></tr>`;
+  for (let e = 1; e <= 10; e++) {
+    const ls = [1, 2, 3].map(c => lastIn(e, c));
+    const tot = ls.every(Boolean) ? ls.reduce((a, x) => a + x.correct, 0) : null;
+    rows += `<tr><td>${t('exam')} ${e}</td>${ls.map(x => `<td>${x ? x.correct : '–'}</td>`).join('')}<td class="tot">${tot === null ? '–' : tot}</td></tr>`;
+  }
+  $('#totals').innerHTML = rows;
+
+  const h = store.history.slice(-40).reverse();
+  $('#hist').innerHTML = h.length ? h.map(x => `<li><span class="dot" style="background:${col(x.c)}"></span>
+    <span>${t('exam')} ${x.e} · ${t('card')} ${x.c}</span><b>${x.correct}</b>
+    <small>(${x.reached} − ${x.errors})</small><span class="when">${fmtDate(x.ts)}</span></li>`).join('')
+    : `<li class="empty">${t('empty')}</li>`;
+}
+
+function renderChart() {
+  const series = [1, 2, 3].map(c => hist(c).map(x => x.correct));
+  const n = Math.max(...series.map(s => s.length));
+  const host = $('#chart');
+  if (n < 2) { host.innerHTML = `<p class="empty">${t('noTrend')}</p>`; return; }
+  const W = 720, H = 250, L = 38, R = 14, Tp = 12, B = 26;
+  const maxV = Math.max(10, Math.ceil(Math.max(...series.flat()) / 10) * 10);
+  const x = i => L + (n === 1 ? 0 : i * (W - L - R) / (n - 1));
+  const y = v => Tp + (1 - v / maxV) * (H - Tp - B);
+  let g = '';
+  for (let k = 0; k <= 5; k++) {
+    const v = maxV * k / 5, yy = y(v);
+    g += `<line x1="${L}" x2="${W - R}" y1="${yy}" y2="${yy}" stroke="var(--line)"/><text x="${L - 8}" y="${yy + 4}" text-anchor="end">${Math.round(v)}</text>`;
+  }
+  let lines = '';
+  series.forEach((s, i) => {
+    if (!s.length) return;
+    const c = i + 1, pts = s.map((v, k) => `${x(k).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
+    lines += `<polyline points="${pts}" fill="none" stroke="${col(c)}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>`;
+    lines += s.map((v, k) => `<circle cx="${x(k).toFixed(1)}" cy="${y(v).toFixed(1)}" r="4.5" fill="var(--solid)" stroke="${col(c)}" stroke-width="3"/>`).join('');
+  });
+  host.innerHTML = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${t('trend')}">${g}${lines}</svg>`;
+}
+
+/* ---------------- render: tips ---------------- */
+function renderTips() {
+  $('#tipGrid').innerHTML = T[lang].tips.map((s, i) => `<div class="tip glass"><div class="num">${i + 1}</div><p>${s}</p></div>`).join('');
+  $('#howList').innerHTML = '<ol style="margin:0; padding-left:1.2em; display:grid; gap:8px">' + T[lang].how.map(s => `<li>${s}</li>`).join('') + '</ol>';
+}
+
+function applyLang() {
+  document.documentElement.lang = lang;
+  $$('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  $('#lang').textContent = lang === 'nl' ? 'EN' : 'NL';
+  document.title = 'DMT Trainer – Hamza';
+  renderAll();
+  if (st && !$('#stage').hidden) { setStageTexts(); updateHint(); }
+}
+function renderAll() { renderPractice(); renderProgress(); renderTips(); }
+
+/* ---------------- tabs ---------------- */
+$$('.tabs button').forEach(b => b.addEventListener('click', () => {
+  $$('.tabs button').forEach(x => x.classList.toggle('on', x === b));
+  ['practice', 'progress', 'tips'].forEach(n => { $('#tab-' + n).hidden = n !== b.dataset.tab; });
+  if (b.dataset.tab === 'progress') renderProgress();
+  window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
+}));
+$('#lang').addEventListener('click', () => { lang = lang === 'nl' ? 'en' : 'nl'; store.lang = lang; save(); applyLang(); });
+$('#examPills').addEventListener('click', ev => {
+  const b = ev.target.closest('[data-exam]'); if (!b) return;
+  selExam = +b.dataset.exam; renderPractice();
+});
+$('#cardTiles').addEventListener('click', ev => {
+  const b = ev.target.closest('[data-start]'); if (b) openStage(selExam, +b.dataset.start);
+});
+$('#statCards').addEventListener('change', ev => {
+  const i = ev.target.closest('[data-goal]'); if (!i) return;
+  const v = Math.max(0, Math.min(150, parseInt(i.value, 10) || 0));
+  if (v) store.goals[i.dataset.goal] = v; else delete store.goals[i.dataset.goal];
+  save(); renderProgress();
+});
+$('#clearBtn').addEventListener('click', () => {
+  if (!confirm(t('confirmClear'))) return;
+  store.history = []; save(); renderAll();
+});
+$('#csvBtn').addEventListener('click', () => {
+  const rows = ['date,exam,card,reached,errors,correct'].concat(store.history.map(x =>
+    [new Date(x.ts).toISOString(), x.e, x.c, x.reached, x.errors, x.correct].join(',')));
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([rows.join('\n')], { type: 'text/csv' }));
+  a.download = 'hamza-dmt-results.csv'; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+});
+
+/* ---------------- audio ---------------- */
+let ac = null;
+const wake = () => { try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); if (ac.state === 'suspended') ac.resume(); } catch (e) {} };
+const beep = (f = 880, d = .14, v = .12) => {
+  try {
+    if (!ac) return;
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.frequency.value = f; g.gain.value = v; o.connect(g); g.connect(ac.destination);
+    o.start(); o.stop(ac.currentTime + d);
+  } catch (e) {}
+};
+
+/* ---------------- stage ---------------- */
+let st = null, zoom = 1;
+const board = $('#board'), rowsEl = $('#rows');
+const CIRC = 213.63;
+
+function setStageTexts() {
+  $('#stTitle').textContent = `${t('exam')} ${st.e} · ${t('card')} ${st.c}`;
+  $('#stLvl').textContent = t('lvl' + st.c);
+  $('#ovTitle').textContent = t('ready');
+  $('#ovText').textContent = t('readyHint');
+  $('#ovStart').textContent = t('go');
+}
+
+function openStage(e, c) {
+  wake();
+  st = { e, c, words: DATA[e - 1][c - 1], phase: 'ready', marker: -1, errors: new Set(), mode: 'last', raf: 0, t0: 0 };
+  let html = '';
+  for (let r = 0; r < 30; r++) {
+    html += `<div class="row" data-r="${r}"><span class="rn">${r + 1}</span>`;
+    for (let k = 0; k < 5; k++) { const i = r * 5 + k; html += `<button class="w" data-i="${i}" tabindex="-1">${st.words[i]}</button>`; }
+    html += '</div>';
+  }
+  rowsEl.innerHTML = html;
+  board.classList.add('blur'); board.scrollTop = 0;
+  $('#stage').hidden = false; document.body.style.overflow = 'hidden';
+  $('#modal').hidden = true;
+  $('#overlay').hidden = false; $('#ovCard').hidden = false; $('#ovCount').hidden = true;
+  $('#stBottom').hidden = true;
+  setRing(TIME); $('#stReached').textContent = '0';
+  setStageTexts(); updateHint();
+  $('#ovStart').focus();
+}
+
+function setRing(left) {
+  $('#ringFg').style.strokeDashoffset = (CIRC * (1 - left / TIME)).toFixed(2);
+  $('#stTime').textContent = Math.ceil(left);
+  $('#ring').classList.toggle('low', left <= 10 && st && st.phase === 'running');
+}
+
+function updateHint() {
+  if (!st) return;
+  const h = { ready: t('readyHint'), count: t('readyHint'), running: t('hintRun'), mark: st.mode === 'last' ? t('hintLast') : t('hintErr') }[st.phase] || '';
+  $('#stHint').textContent = h;
+  $('#segLast').classList.toggle('on', st.mode === 'last');
+  $('#segErr').classList.toggle('on', st.mode === 'errors');
+}
+
+function updateMarks() {
+  const run = st.phase === 'running', mk = st.phase === 'mark';
+  $$('.w', rowsEl).forEach(b => {
+    const i = +b.dataset.i;
+    b.classList.toggle('past', run && i < st.marker);
+    b.classList.toggle('mark', st.marker === i);
+    b.classList.toggle('err', st.errors.has(i));
+    b.classList.toggle('dim', mk && st.marker >= 0 && i > st.marker);
+  });
+  $$('.row', rowsEl).forEach(r => r.classList.toggle('cur', st.marker >= 0 && +r.dataset.r === Math.floor(st.marker / 5)));
+  $('#stReached').textContent = st.marker + 1;
+  $('#finishBtn').disabled = st.marker < 0;
+}
+
+$('#ovStart').addEventListener('click', () => {
+  wake(); st.phase = 'count';
+  $('#ovCard').hidden = true; const c = $('#ovCount'); c.hidden = false;
+  let n = 3;
+  const step = () => {
+    if (!st || st.phase !== 'count') return;
+    if (n === 0) { c.hidden = true; $('#overlay').hidden = true; beep(1175, .3); beginRun(); return; }
+    c.textContent = n; c.style.animation = 'none'; void c.offsetWidth; c.style.animation = '';
+    beep(660, .12); n--; setTimeout(step, 800);
+  };
+  step();
+});
+
+function beginRun() {
+  st.phase = 'running'; board.classList.remove('blur');
+  updateHint(); updateMarks();
+  st.t0 = performance.now();
+  const me = st;
+  const tick = () => {
+    if (st !== me || me.phase !== 'running') { clearInterval(me.raf); return; }
+    const left = Math.max(0, TIME - (performance.now() - me.t0) / 1000);
+    setRing(left);
+    if (left <= 0) endRun();
+  };
+  me.raf = setInterval(tick, 50);
+  tick();
+}
+
+function endRun() {
+  clearInterval(st.raf);
+  st.phase = 'mark'; st.mode = st.marker >= 0 ? 'errors' : 'last';
+  setRing(0); $('#ring').classList.remove('low');
+  beep(520, .5, .16);
+  $('#stBottom').hidden = false;
+  updateHint(); updateMarks();
+  if (st.marker >= 0) scrollToWord(st.marker);
+}
+
+function scrollToWord(i) {
+  const b = $(`.w[data-i="${i}"]`, rowsEl);
+  if (b) b.scrollIntoView({ block: 'center', behavior: reduce ? 'auto' : 'smooth' });
+}
+
+rowsEl.addEventListener('click', ev => {
+  const b = ev.target.closest('.w'); if (!b || !st) return;
+  const i = +b.dataset.i;
+  if (st.phase === 'running') { st.marker = i; updateMarks(); return; }
+  if (st.phase !== 'mark') return;
+  if (st.mode === 'last') {
+    st.marker = i;
+    [...st.errors].forEach(x => { if (x > i) st.errors.delete(x); });
+    st.mode = 'errors';
+  } else {
+    if (i > st.marker) return;
+    st.errors.has(i) ? st.errors.delete(i) : st.errors.add(i);
+  }
+  updateHint(); updateMarks();
+});
+$('#segLast').addEventListener('click', () => { st.mode = 'last'; updateHint(); });
+$('#segErr').addEventListener('click', () => { if (st.marker >= 0) { st.mode = 'errors'; updateHint(); } });
+$('#zIn').addEventListener('click', () => { zoom = Math.min(2.2, +(zoom + .15).toFixed(2)); board.style.setProperty('--zoom', zoom); });
+$('#zOut').addEventListener('click', () => { zoom = Math.max(.7, +(zoom - .15).toFixed(2)); board.style.setProperty('--zoom', zoom); });
+
+function closeStage(force) {
+  if (st && (st.phase === 'running' || st.phase === 'mark' || st.phase === 'count') && !force && !confirm(t('confirmQuit'))) return;
+  if (st) { clearInterval(st.raf); st.phase = 'closed'; }
+  $('#stage').hidden = true; document.body.style.overflow = '';
+  renderAll();
+}
+$('#stBack').addEventListener('click', () => closeStage(false));
+
+/* ---------------- result ---------------- */
+const starSvg = on => `<svg class="${on ? 'on' : ''}" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9z"/></svg>`;
+
+$('#finishBtn').addEventListener('click', () => {
+  if (st.marker < 0) return;
+  const reached = st.marker + 1, errors = st.errors.size, correct = reached - errors;
+  const prev = hist(st.c), prevLast = prev.length ? prev[prev.length - 1] : null, prevBest = bestFor(st.c);
+  const rec = { ts: Date.now(), e: st.e, c: st.c, reached, errors, correct };
+  store.history.push(rec); save();
+
+  let stars = 1, msg = t('s1'), isBest = false;
+  if (!prevLast) { stars = 2; msg = t('first'); }
+  else if (correct > prevBest) { stars = 3; isBest = true; msg = t('s3'); }
+  else if (correct >= prevLast.correct) { stars = 2; msg = t('s2'); }
+
+  let delta = '';
+  if (prevLast) {
+    const d = correct - prevLast.correct;
+    delta = d === 0 ? `<div class="delta">${t('same')}</div>`
+      : `<div class="delta ${d > 0 ? 'up' : 'down'}">${d > 0 ? '+' : ''}${d} ${t('vsLast', { d: '' }).trim()}</div>`;
+  }
+  const ls = [1, 2, 3].map(c => lastIn(st.e, c));
+  const total = ls.every(Boolean) ? `<div class="delta up">${t('examTotal', { e: st.e, n: ls.reduce((a, x) => a + x.correct, 0) })}</div>` : '';
+  const acc = reached ? Math.round(correct / reached * 100) : 0;
+
+  $('#res').innerHTML = `
+    <div class="stars">${[1, 2, 3].map(k => starSvg(k <= stars)).join('')}</div>
+    <h2>${t('resultTitle')}</h2>
+    ${isBest ? `<span class="badge-new">${t('newBest')}</span>` : ''}
+    <div class="big-num">${correct}</div><div class="unit">${t('unit')}</div>
+    <div class="grid3">
+      <div><b>${reached}</b><small>${t('reached')}</small></div>
+      <div><b>${errors}</b><small>${t('errors')}</small></div>
+      <div><b>${acc}%</b><small>${t('accuracy')}</small></div>
+    </div>
+    ${delta}${total}
+    <p style="color:var(--muted); margin:8px 0 0">${msg}</p>
+    <div class="actions">
+      <button class="btn" id="rAgain">${t('again')}</button>
+      <button class="btn primary" id="rNext">${t('nextCard')}</button>
+      <button class="btn ghost" id="rClose">${t('close')}</button>
+    </div>`;
+  const e0 = st.e, c0 = st.c;
+  $('#modal').hidden = false;
+  $('#rAgain').onclick = () => { $('#modal').hidden = true; closeStage(true); openStage(e0, c0); };
+  $('#rNext').onclick = () => { const r = recommend(); $('#modal').hidden = true; closeStage(true); openStage(r.e, r.c); };
+  $('#rClose').onclick = () => { $('#modal').hidden = true; closeStage(true); };
+  $('#rNext').focus();
+  st.phase = 'closed';
+  if (stars === 3) confetti();
+  beep(784, .12); setTimeout(() => beep(988, .12), 130); setTimeout(() => beep(1319, .25), 260);
+});
+
+document.addEventListener('keydown', ev => {
+  if (ev.key !== 'Escape') return;
+  if (!$('#modal').hidden) { $('#rClose').click(); return; }
+  if (!$('#stage').hidden) closeStage(false);
+});
+
+/* ---------------- confetti ---------------- */
+function confetti() {
+  if (reduce) return;
+  const cv = $('#confetti'), cx = cv.getContext('2d');
+  cv.width = innerWidth; cv.height = innerHeight;
+  const cols = ['#4f46e5', '#06b6d4', '#f59e0b', '#16a34a', '#e11d48', '#8b5cf6'];
+  const ps = Array.from({ length: 170 }, () => ({
+    x: innerWidth / 2 + (Math.random() - .5) * 200, y: innerHeight * .4,
+    vx: (Math.random() - .5) * 15, vy: -Math.random() * 15 - 4, s: 5 + Math.random() * 7,
+    c: cols[(Math.random() * cols.length) | 0], r: Math.random() * 6, vr: (Math.random() - .5) * .4
+  }));
+  const t0 = performance.now();
+  (function f(now) {
+    const k = (now - t0) / 3200;
+    cx.clearRect(0, 0, cv.width, cv.height);
+    if (k >= 1) return;
+    ps.forEach(p => {
+      p.vy += .32; p.x += p.vx; p.y += p.vy; p.r += p.vr; p.vx *= .99;
+      cx.save(); cx.globalAlpha = 1 - k * k; cx.translate(p.x, p.y); cx.rotate(p.r);
+      cx.fillStyle = p.c; cx.fillRect(-p.s / 2, -p.s / 3, p.s, p.s * .66); cx.restore();
+    });
+    requestAnimationFrame(f);
+  })(t0);
+}
+
+applyLang();
+})();
+</script>
+</body>
+</html>
