@@ -143,10 +143,47 @@ svg.chart{width:100%; height:auto; display:block}
 .note{color:var(--muted); font-size:.85rem; margin:10px 0 0}
 .empty{color:var(--muted); padding:18px 4px}
 
+/* ---------- norm chart + levels ---------- */
+.lv{display:inline-block; min-width:2.4em; padding:3px 10px; border-radius:999px; font-weight:800; font-size:.8rem; color:#fff; text-align:center}
+.lI{background:#16a34a} .lII{background:#65a30d} .lIII{background:#2563eb} .lIV{background:#f59e0b; color:#1f1300} .lV{background:#e11d48}
+.legend .sw{display:inline-block; width:20px; height:12px; border-radius:4px; margin-right:6px; vertical-align:-1px}
+.legend .sw.m7{background:var(--accent2); opacity:.5}
+.legend .sw.e7{background:var(--accent); opacity:.4}
+.legend .sw.top{height:0; border-top:3px dashed var(--ok); border-radius:0; vertical-align:3px}
+.legend .sw.ham{height:4px; background:var(--ink); vertical-align:3px}
+#normLegend span{display:inline-flex; align-items:center; gap:6px}
+.norm-summary{display:flex; flex-wrap:wrap; align-items:center; gap:10px 24px; margin:16px 0 4px}
+.ns-main b{font-size:3.2rem; line-height:1; display:block}
+.ns-main small{color:var(--muted)}
+.ns-chips{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
+.ns-d{font-weight:800}
+.ns-d.up{color:var(--ok)} .ns-d.down{color:var(--bad)}
+.norm-summary p{margin:0; color:var(--muted); flex-basis:100%}
+.chart text.val{fill:var(--ink); font-weight:800; font-size:12px}
+#modeSeg{display:inline-flex}
+#lvlTable td{text-align:center}
+#lvlTable td.mid{background:var(--hover)}
+#lvlTable td.hl{background:var(--accent); color:#fff; font-weight:900}
+#lvlTable td.grp{text-align:left; font-weight:800}
+
+/* ---------- guide ---------- */
+.steps{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:14px}
+.step{padding:18px; display:flex; gap:14px}
+.step h4{margin:0 0 4px; font-size:1.05rem}
+.step p{margin:0; color:var(--muted)}
+.gl{margin:0; padding-left:1.2em; display:grid; gap:8px}
+.faqs{display:grid; gap:10px}
+details.faq{padding:14px 18px}
+details.faq summary{cursor:pointer; font-weight:800}
+details.faq p{margin:10px 0 0; color:var(--muted)}
+.gloss{display:grid; grid-template-columns:max-content 1fr; gap:8px 18px; margin:0}
+.gloss dt{font-weight:800}
+.gloss dd{margin:0; color:var(--muted)}
+
 /* ---------- tips ---------- */
 .tipgrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:16px}
 .tip{padding:20px; display:flex; gap:14px}
-.tip .num{flex:none; width:38px; height:38px; border-radius:12px; display:grid; place-items:center; font-weight:900; color:#fff;
+.tip .num,.step .num{flex:none; width:38px; height:38px; border-radius:12px; display:grid; place-items:center; font-weight:900; color:#fff;
   background:linear-gradient(135deg,var(--accent),var(--accent2))}
 .tip p{margin:0}
 
@@ -247,6 +284,7 @@ svg.chart{width:100%; height:auto; display:block}
   <nav class="tabs" role="tablist">
     <button role="tab" data-tab="practice" class="on" data-i18n="tabPractice">Oefenen</button>
     <button role="tab" data-tab="progress" data-i18n="tabProgress">Resultaten</button>
+    <button role="tab" data-tab="guide" data-i18n="tabGuide">Gids</button>
     <button role="tab" data-tab="tips" data-i18n="tabTips">Tips</button>
   </nav>
   <div class="tools">
@@ -278,6 +316,22 @@ svg.chart{width:100%; height:auto; display:block}
 
   <!-- PROGRESS -->
   <section id="tab-progress" hidden>
+    <div class="panel glass" style="margin-top:6px">
+      <h3 class="sec" style="margin-top:0" data-i18n="normTitle"></h3>
+      <div class="seg" id="modeSeg" role="group">
+        <button id="modeC23" data-mode="c23" data-i18n="normModeSchool"></button>
+        <button id="modeC123" data-mode="c123" data-i18n="normMode123"></button>
+      </div>
+      <div id="normSummary" class="norm-summary"></div>
+      <div class="legend" id="normLegend" style="margin-top:10px"></div>
+      <div id="normChart"></div>
+      <p class="note" data-i18n="normNote"></p>
+    </div>
+    <div class="panel glass">
+      <h3 class="sec" style="margin-top:0" data-i18n="lvlTitle"></h3>
+      <div style="overflow:auto"><table class="tbl" id="lvlTable"></table></div>
+      <p class="note" data-i18n="lvlNote"></p>
+    </div>
     <h3 class="sec" style="margin-top:6px" data-i18n="progressTitle"></h3>
     <div id="statCards" class="stats"></div>
     <div class="panel glass">
@@ -299,6 +353,11 @@ svg.chart{width:100%; height:auto; display:block}
       </div>
       <p class="note" data-i18n="localNote"></p>
     </div>
+  </section>
+
+  <!-- GUIDE -->
+  <section id="tab-guide" hidden>
+    <div id="guideBox"></div>
   </section>
 
   <!-- TIPS -->
@@ -365,7 +424,31 @@ const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const T = {
 nl: {
   appTitle:'DMT Trainer', sub:'Hamza · Groep 7',
-  tabPractice:'Oefenen', tabProgress:'Resultaten', tabTips:'Tips',
+  tabPractice:'Oefenen', tabProgress:'Resultaten', tabGuide:'Gids', tabTips:'Tips',
+  guideTitle:'Gids voor beginners', guideIntro:'Nog nooit van de DMT gehoord? Geen zorgen. Deze gids legt het in gewone taal uit, stap voor stap.', guideStart:'Start meteen met oefenen',
+  normTitle:'Hamza t.o.v. M7 en E7', normModeSchool:'Kaart 2+3 (zoals op school)', normMode123:'Kaart 1+2+3',
+  lgM7:'M7 niveau III (gemiddeld)', lgE7:'E7 niveau III (gemiddeld)', lgTop:'E7 niveau I (top)', lgHamza:'Hamza',
+  lvlTitle:'Niveau-tabel: welke score hoort bij welk niveau?', lvlCards:'Kaarten', lvlExam:'Toets',
+  lvlNote:'Totaal aantal goed gelezen woorden (DMT versie 2018). I is de beste groep, III het midden en V de zwakste. Gemarkeerd: waar Hamza nu zit, volgens de gekozen weergave. Bron: Cito-tabellen via een schoolwebsite, controleer het met de school. Oude DMT-versie (2009): landelijk gemiddelde 90 bij M7 en 95 bij E7.',
+  normNeed:'Lees kaart 2 en kaart 3 van een toets (bij Kaart 1+2+3 ook kaart 1) om het eerste punt te zien. De grafiek groeit na elke toets vanzelf mee.',
+  normVsPrev:'t.o.v. vorige toets', normGap:'Nog {n} woorden tot het begin van niveau III (E7).', normAbove:'Al op of boven het begin van niveau III (E7).',
+  normNote:'Richtlijn, geen officieel niveau: dit zijn oefenkaarten en niet de echte Cito-kaarten. Niveau I (beste) tot en met V komt uit Cito-tabellen (versie 2018) via een schoolwebsite. Controleer het met de school.',
+  g:{
+    whatT:'Wat is de DMT?',
+    what:['De Drie-Minuten-Toets is een leestest op school. Een kind leest rijtjes losse woorden hardop, zo snel en zo goed mogelijk.','Per kaart is er 1 minuut. Elk goed gelezen woord is 1 punt.','Op school doet je kind de toets twee keer per jaar: M7 (midden groep 7, rond januari en februari) en E7 (eind groep 7, rond juni).','Deze site is oefenmateriaal met 10 toetsen van elk 3 kaarten, zodat Hamza went aan het tempo.'],
+    stepsT:'Zo oefen je, stap voor stap',
+    steps:[['Kies een kaart','Druk op de grote knop Aanbevolen of kies zelf een toets en een kaart. Begin met kaart 1 (makkelijk).'],['Maak je klaar','Een rustige plek met goed licht. Een ouder zit naast Hamza en kijkt mee op het scherm.'],['Start de timer','Druk op Start. Na 3, 2, 1 begint de minuut. Hamza leest hardop, van links naar rechts, rij voor rij.'],['Volg mee','De ouder tikt af en toe op het woord waar Hamza is. Dat hoeft niet, maar het helpt achteraf.'],['Na de minuut','Tik op het laatste woord dat Hamza las. Tik daarna op de woorden die fout waren. Druk op Klaar.'],['Bekijk de score','Je ziet de score, de sterren en het verschil met de vorige keer. Daarna: nog een kaart, of stoppen.']],
+    errT:'Wat is een fout?',
+    err:'Een overgeslagen woord of een verkeerd gelezen woord is een fout. Score = gelezen woorden min fouten. Verbetert Hamza zichzelf meteen? Kies een vaste regel en houd die elke keer hetzelfde, dan blijft de vergelijking eerlijk. Weet je niet wat de school doet, vraag het dan aan de leraar.',
+    graphT:'Hoe lees je de grafiek?',
+    graph:['Elke stip is 1 toets. Je ziet kaart 2 en kaart 3 bij elkaar opgeteld, zoals op school.','De gekleurde vlakken zijn niveau III: het gemiddelde voor midden groep 7 (M7) en eind groep 7 (E7).','Stip in het vlak: Hamza leest gemiddeld. Erboven: beter dan gemiddeld. Eronder: nog wat extra oefenen.','De groene stippellijn is niveau I, de top voor eind groep 7. Dat is het verre doel.','De tabel met alle niveaus en scores staat in het tabblad Resultaten, onder de grafiek.','Let op: dit zijn oefenkaarten en niet de echte kaarten van school. Kijk vooral of de lijn omhoog gaat.'],
+    planT:'Een simpel oefenplan',
+    plan:['2 toetsen per week, bijvoorbeeld dinsdag en zaterdag. Dan ben je in 5 weken klaar met alle 10.','Doe nooit meer dan 1 toets per keer (3 kaarten, ongeveer 5 minuten).','Lees daarnaast elke dag 10 minuten hardop uit een boek dat Hamza leuk vindt.','Prijs de inzet en niet alleen de score. Een kleine stijging is al winst.'],
+    faqT:'Veelgestelde vragen',
+    faq:[['Waarom scoort Hamza hier anders dan op school?','De kaarten zijn niet hetzelfde als de echte Cito-kaarten. Moeilijkheid en woorden verschillen. Vergelijk daarom vooral met zijn eigen vorige scores.'],['Mag Hamza dezelfde kaart nog eens doen?','Ja, maar de score stijgt dan deels doordat hij de woorden herkent. Nieuwe kaarten geven een eerlijker beeld.'],['Waar blijven de resultaten?','Alleen in deze browser op dit apparaat. Wis je de browsergegevens, dan zijn ze weg. Gebruik af en toe Exporteer CSV (tabblad Resultaten) als reservekopie.'],['Ik heb per ongeluk verkeerd getikt.','Tik het woord nog eens aan om een fout te herstellen, of kies 1. Laatste woord om het laatste woord aan te passen. Met Terug stop je zonder op te slaan.'],['Wat betekenen niveau I tot en met V?','I is de beste groep leerlingen, V de zwakste en III zit in het midden. De grenzen komen uit Cito-tabellen (versie 2018) en staan in de grafiek.'],['Moet ik alle drie de kaarten doen?','Op school worden meestal alleen kaart 2 en 3 gelezen. Kaart 1 is een warming-up. In het tabblad Resultaten kies je tussen kaart 2+3 en kaart 1+2+3.']],
+    glossT:'Woordenlijst',
+    gloss:[['DMT','Drie-Minuten-Toets, een test voor technisch lezen.'],['M7 en E7','Midden groep 7 (januari en februari) en eind groep 7 (juni).'],['Niveau I tot V','Vijf groepen, van beste (I) tot zwakste (V).'],['Kaart','Een blad met 150 woorden in 30 rijen en 5 kolommen.']]
+  },
   hello:'Hoi Hamza!', helloSub:'Lees zo snel en zo goed mogelijk. Elke kaart duurt precies 1 minuut.',
   rec:'Aanbevolen: Toets {e} · Kaart {c}',
   chipTries:'kaarten gelezen', chipBest:'beste score', chipStreak:'dagen op rij',
@@ -386,12 +469,12 @@ nl: {
   first:'Eerste resultaat voor dit niveau staat. Nu kun je jezelf verslaan!',
   newBest:'Nieuw record voor dit niveau!',
   vsLast:'{d} woorden t.o.v. vorige keer', same:'Gelijk aan vorige keer',
-  examTotal:'Totaal Toets {e}: {n} woorden',
+  examTotal:'Toets {e}: kaart 2+3 samen {n} woorden (richtlijn E7: niveau {l})',
   again:'Nog een keer', nextCard:'Volgende aanbevolen kaart', close:'Sluiten',
   confirmQuit:'Stoppen? Deze poging telt dan niet mee.',
   progressTitle:'Mijn voortgang', goal:'Doel', trend:'Score per poging', noTrend:'Lees minstens 2 kaarten om je lijn te zien.',
   examTotals:'Overzicht per toets', total:'Totaal',
-  totalNote:'Op school worden de goede woorden van de drie kaarten meestal bij elkaar opgeteld. Dit totaal is oefenmateriaal en geeft geen officieel niveau.',
+  totalNote:'Op school worden meestal alleen kaart 2 en 3 gelezen en opgeteld. De niveaus (M7 en E7) zijn een richtlijn voor deze oefenkaarten en geen officieel niveau.',
   history:'Geschiedenis', empty:'Nog geen resultaten. Lees je eerste kaart!',
   clearAll:'Alles wissen', confirmClear:'Alle resultaten wissen? Dit kan niet ongedaan worden gemaakt.', exportCsv:'Exporteer CSV',
   localNote:'Resultaten blijven alleen in deze browser op dit apparaat.',
@@ -414,7 +497,31 @@ nl: {
 },
 en: {
   appTitle:'DMT Trainer', sub:'Hamza · Group 7',
-  tabPractice:'Practice', tabProgress:'Progress', tabTips:'Tips',
+  tabPractice:'Practice', tabProgress:'Progress', tabGuide:'Guide', tabTips:'Tips',
+  guideTitle:'Guide for beginners', guideIntro:'Never heard of the DMT? No worries. This guide explains it in plain language, step by step.', guideStart:'Start practising now',
+  normTitle:'Hamza vs M7 and E7', normModeSchool:'Cards 2+3 (as at school)', normMode123:'Cards 1+2+3',
+  lgM7:'M7 level III (average)', lgE7:'E7 level III (average)', lgTop:'E7 level I (top)', lgHamza:'Hamza',
+  lvlTitle:'Level table: which score belongs to which level?', lvlCards:'Cards', lvlExam:'Test',
+  lvlNote:'Total number of correctly read words (DMT version 2018). I is the best group, III the middle and V the weakest. Highlighted: where Hamza is now, for the selected view. Source: Cito tables via a school website, check with the school. Old DMT version (2009): national average 90 at M7 and 95 at E7.',
+  normNeed:'Read card 2 and card 3 of a test (for Cards 1+2+3 also card 1) to see the first point. The chart grows by itself after every test.',
+  normVsPrev:'vs previous test', normGap:'{n} more words to reach the start of level III (E7).', normAbove:'Already at or above the start of level III (E7).',
+  normNote:'A guideline, not an official level: these are practice cards, not the real Cito cards. Levels I (best) to V come from Cito tables (version 2018) via a school website. Check with the school.',
+  g:{
+    whatT:'What is the DMT?',
+    what:['The Drie-Minuten-Toets (Three-Minute Test) is a reading test at school. A child reads lists of single words aloud, as fast and as accurately as possible.','Each card takes 1 minute. Every correctly read word is 1 point.','At school the test is taken twice a year: M7 (middle of group 7, around January and February) and E7 (end of group 7, around June).','This site is practice material with 10 tests of 3 cards each, so Hamza gets used to the pace.'],
+    stepsT:'How to practise, step by step',
+    steps:[['Pick a card','Press the big Recommended button or choose a test and card yourself. Start with card 1 (easy).'],['Get ready','A quiet place with good light. A parent sits next to Hamza and follows along on the screen.'],['Start the timer','Press Start. After 3, 2, 1 the minute begins. Hamza reads aloud, left to right, row by row.'],['Follow along','The parent taps the word Hamza is at now and then. It is optional, but it helps afterwards.'],['After the minute','Tap the last word Hamza read. Then tap the words that were wrong. Press Done.'],['See the score','You see the score, the stars and the difference with last time. Then: another card, or stop.']],
+    errT:'What counts as a mistake?',
+    err:'A skipped word or a misread word is a mistake. Score = words read minus mistakes. Does Hamza correct himself straight away? Pick one fixed rule and keep it the same every time, so comparisons stay fair. If you do not know what the school does, ask the teacher.',
+    graphT:'How to read the graph',
+    graph:['Each dot is 1 test. You see card 2 and card 3 added together, as at school.','The coloured areas are level III: the average for middle of group 7 (M7) and end of group 7 (E7).','Dot inside the area: Hamza reads at average. Above it: better than average. Below it: a bit more practice needed.','The green dashed line is level I, the top for end of group 7. That is the far-away goal.','The table with all levels and scores is in the Progress tab, below the graph.','Note: these are practice cards, not the real school cards. Mostly check whether the line goes up.'],
+    planT:'A simple practice plan',
+    plan:['2 tests a week, for example Tuesday and Saturday. Then all 10 are done in 5 weeks.','Never do more than 1 test per session (3 cards, about 5 minutes).','Also read aloud for 10 minutes every day from a book Hamza likes.','Praise the effort and not only the score. A small rise is already a win.'],
+    faqT:'Frequently asked questions',
+    faq:[['Why does Hamza score differently here than at school?','The cards are not the same as the real Cito cards. Difficulty and words differ. So compare mostly with his own earlier scores.'],['Can Hamza redo the same card?','Yes, but the score then rises partly because he recognises the words. New cards give a fairer picture.'],['Where are the results stored?','Only in this browser on this device. If you clear browser data they are gone. Use Export CSV (Progress tab) now and then as a backup.'],['I tapped the wrong word by accident.','Tap the word again to undo a mistake, or choose 1. Last word to change the last word. Back stops without saving.'],['What do levels I to V mean?','I is the best group of pupils, V the weakest and III is in the middle. The limits come from Cito tables (version 2018) and are shown in the graph.'],['Do I need to do all three cards?','At school usually only cards 2 and 3 are read. Card 1 is a warm-up. In the Progress tab you can choose between cards 2+3 and cards 1+2+3.']],
+    glossT:'Glossary',
+    gloss:[['DMT','Drie-Minuten-Toets, a test for technical reading.'],['M7 and E7','Middle of group 7 (January and February) and end of group 7 (June).'],['Level I to V','Five groups, from best (I) to weakest (V).'],['Card','A sheet with 150 words in 30 rows and 5 columns.']]
+  },
   hello:'Hi Hamza!', helloSub:'Read as fast and as accurately as you can. Every card takes exactly 1 minute.',
   rec:'Recommended: Test {e} · Card {c}',
   chipTries:'cards read', chipBest:'best score', chipStreak:'day streak',
@@ -435,12 +542,12 @@ en: {
   first:'First result for this level is in. Now you can beat yourself!',
   newBest:'New record for this level!',
   vsLast:'{d} words vs last time', same:'Same as last time',
-  examTotal:'Test {e} total: {n} words',
+  examTotal:'Test {e}: cards 2+3 together {n} words (E7 guideline: level {l})',
   again:'Once more', nextCard:'Next recommended card', close:'Close',
   confirmQuit:'Stop? This attempt will not be saved.',
   progressTitle:'My progress', goal:'Goal', trend:'Score per attempt', noTrend:'Read at least 2 cards to see your line.',
   examTotals:'Overview per test', total:'Total',
-  totalNote:'At school the correct words of the three cards are usually added together. This total is practice material and not an official level.',
+  totalNote:'At school usually only cards 2 and 3 are read and added together. The levels (M7 and E7) are a guideline for these practice cards and not an official level.',
   history:'History', empty:'No results yet. Read your first card!',
   clearAll:'Clear all', confirmClear:'Clear all results? This cannot be undone.', exportCsv:'Export CSV',
   localNote:'Results stay in this browser on this device only.',
@@ -470,6 +577,7 @@ const load = () => {
 let store = load();
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} };
 let lang = store.lang === 'en' ? 'en' : 'nl';
+let mode = store.mode === 'c123' ? 'c123' : 'c23';
 const t = (k, o = {}) => {
   let s = (T[lang][k] !== undefined ? T[lang][k] : (T.nl[k] !== undefined ? T.nl[k] : k));
   for (const x in o) s = String(s).split('{' + x + '}').join(o[x]);
@@ -496,6 +604,15 @@ const recommend = () => {
 };
 const fmtDate = ts => new Date(ts).toLocaleString(lang === 'nl' ? 'nl-NL' : 'en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 const col = c => 'var(--c' + c + ')';
+const NORMS = {
+  c23: { M7: { I: 182, II: [167, 181], III: [150, 166], IV: [129, 149] }, E7: { I: 188, II: [173, 187], III: [156, 172], IV: [134, 155] } },
+  c123: { M7: { I: 302, II: [277, 301], III: [251, 276], IV: [219, 250] }, E7: { I: 312, II: [287, 311], III: [259, 286], IV: [227, 258] } }
+};
+const sumFor = (e, m) => {
+  const ls = (m === 'c23' ? [2, 3] : [1, 2, 3]).map(c => lastIn(e, c));
+  return ls.every(Boolean) ? ls.reduce((a, x) => a + x.correct, 0) : null;
+};
+const levelOf = (v, n) => v >= n.I ? 'I' : v >= n.II[0] ? 'II' : v >= n.III[0] ? 'III' : v >= n.IV[0] ? 'IV' : 'V';
 
 /* ---------------- render: practice ---------------- */
 let selExam = recommend().e;
@@ -555,13 +672,16 @@ function renderProgress() {
 
   renderChart();
 
-  let rows = `<tr><th>${t('exam')}</th>${[1, 2, 3].map(c => `<th>${t('card')} ${c}</th>`).join('')}<th>${t('total')}</th></tr>`;
+  const lvc = (v, n) => v === null ? '–' : `<span class="lv l${levelOf(v, n)}">${levelOf(v, n)}</span>`;
+  let rows = `<tr><th>${t('exam')}</th>${[1, 2, 3].map(c => `<th>${t('card')} ${c}</th>`).join('')}<th>2+3</th><th>1+2+3</th><th>M7</th><th>E7</th></tr>`;
   for (let e = 1; e <= 10; e++) {
     const ls = [1, 2, 3].map(c => lastIn(e, c));
-    const tot = ls.every(Boolean) ? ls.reduce((a, x) => a + x.correct, 0) : null;
-    rows += `<tr><td>${t('exam')} ${e}</td>${ls.map(x => `<td>${x ? x.correct : '–'}</td>`).join('')}<td class="tot">${tot === null ? '–' : tot}</td></tr>`;
+    const s23 = sumFor(e, 'c23'), s123 = sumFor(e, 'c123'), cur = mode === 'c23' ? s23 : s123;
+    rows += `<tr><td>${t('exam')} ${e}</td>${ls.map(x => `<td>${x ? x.correct : '–'}</td>`).join('')}<td class="tot">${s23 === null ? '–' : s23}</td><td class="tot">${s123 === null ? '–' : s123}</td><td>${lvc(cur, NORMS[mode].M7)}</td><td>${lvc(cur, NORMS[mode].E7)}</td></tr>`;
   }
   $('#totals').innerHTML = rows;
+  renderNormChart();
+  renderLevelTable();
 
   const h = store.history.slice(-40).reverse();
   $('#hist').innerHTML = h.length ? h.map(x => `<li><span class="dot" style="background:${col(x.c)}"></span>
@@ -594,6 +714,102 @@ function renderChart() {
   host.innerHTML = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${t('trend')}">${g}${lines}</svg>`;
 }
 
+/* ---------------- render: norm chart ---------------- */
+function renderNormChart() {
+  const nm = NORMS[mode];
+  $('#modeC23').classList.toggle('on', mode === 'c23');
+  $('#modeC123').classList.toggle('on', mode === 'c123');
+  const vals = Array.from({ length: 10 }, (_, i) => sumFor(i + 1, mode));
+  const done = vals.map((v, i) => v === null ? null : { e: i + 1, v }).filter(Boolean);
+  const swatch = inner => `<svg width="22" height="12" aria-hidden="true">${inner}</svg>`;
+  const sw = {
+    m7: swatch('<rect width="22" height="12" rx="3" fill="var(--accent2)" opacity=".5"/>'),
+    e7: swatch('<rect width="22" height="12" rx="3" fill="var(--accent)" opacity=".4"/>'),
+    top: swatch('<line x1="0" x2="22" y1="6" y2="6" stroke="var(--ok)" stroke-width="3" stroke-dasharray="6 4"/>'),
+    ham: swatch('<line x1="0" x2="22" y1="6" y2="6" stroke="var(--ink)" stroke-width="3" stroke-linecap="round"/>')
+  };
+  $('#normLegend').innerHTML = `<span>${sw.m7}${t('lgM7')}</span><span>${sw.e7}${t('lgE7')}</span><span>${sw.top}${t('lgTop')}</span><span>${sw.ham}${t('lgHamza')}</span>`;
+
+  let sum;
+  if (!done.length) sum = `<p class="empty">${t('normNeed')}</p>`;
+  else {
+    const last = done[done.length - 1], prev = done.length > 1 ? done[done.length - 2] : null;
+    const lm = levelOf(last.v, nm.M7), le = levelOf(last.v, nm.E7), gap = nm.E7.III[0] - last.v;
+    const d = prev ? last.v - prev.v : null;
+    sum = `<div class="ns-main"><b>${last.v}</b><small>${t('exam')} ${last.e}</small></div>
+      <div class="ns-chips"><span class="lv l${lm}">M7 · ${lm}</span><span class="lv l${le}">E7 · ${le}</span>
+      ${d === null ? '' : `<span class="ns-d ${d >= 0 ? 'up' : 'down'}">${d > 0 ? '+' : ''}${d} ${t('normVsPrev')}</span>`}</div>
+      <p>${gap > 0 ? t('normGap', { n: gap }) : t('normAbove')}</p>`;
+  }
+  $('#normSummary').innerHTML = sum;
+
+  const W = 720, H = 300, L = 46, R = 16, Tp = 18, B = 34;
+  const hi0 = Math.max(nm.E7.I + 10, ...done.map(d => d.v + 10));
+  const lo0 = Math.max(0, Math.min(nm.M7.IV[0], ...done.map(d => d.v)) - 20);
+  const stepT = hi0 - lo0 > 200 ? 50 : hi0 - lo0 > 100 ? 20 : 10;
+  const hi = Math.ceil(hi0 / stepT) * stepT, lo = Math.floor(lo0 / stepT) * stepT;
+  const x = e => L + (e - 1) * (W - L - R) / 9;
+  const y = v => Tp + (1 - (v - lo) / (hi - lo)) * (H - Tp - B);
+  let g = '';
+  for (let v = lo; v <= hi; v += stepT) {
+    const yy = y(v);
+    g += `<line x1="${L}" x2="${W - R}" y1="${yy.toFixed(1)}" y2="${yy.toFixed(1)}" stroke="var(--line)"/><text x="${L - 8}" y="${(yy + 4).toFixed(1)}" text-anchor="end">${Math.round(v)}</text>`;
+  }
+  for (let e = 1; e <= 10; e++) g += `<text x="${x(e).toFixed(1)}" y="${H - 12}" text-anchor="middle">${e}</text>`;
+  const band = (n, fill, op) => `<rect x="${L}" width="${W - L - R}" y="${y(n.III[1] + 1).toFixed(1)}" height="${(y(n.III[0]) - y(n.III[1] + 1)).toFixed(1)}" fill="${fill}" opacity="${op}"/>`;
+  g += band(nm.M7, 'var(--accent2)', .28) + band(nm.E7, 'var(--accent)', .22);
+  g += `<line x1="${L}" x2="${W - R}" y1="${y(nm.E7.I).toFixed(1)}" y2="${y(nm.E7.I).toFixed(1)}" stroke="var(--ok)" stroke-width="2" stroke-dasharray="7 6"/>`;
+  if (done.length) {
+    const pts = done.map(d => `${x(d.e).toFixed(1)},${y(d.v).toFixed(1)}`).join(' ');
+    g += `<polyline points="${pts}" fill="none" stroke="var(--ink)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>`;
+    done.forEach((d, i) => {
+      const isLast = i === done.length - 1;
+      g += `<circle cx="${x(d.e).toFixed(1)}" cy="${y(d.v).toFixed(1)}" r="${isLast ? 7 : 5}" fill="${isLast ? '#f97316' : 'var(--solid)'}" stroke="var(--ink)" stroke-width="3"><title>${t('exam')} ${d.e}: ${d.v}</title></circle>`;
+      g += `<text class="val" x="${x(d.e).toFixed(1)}" y="${(y(d.v) - 12).toFixed(1)}" text-anchor="middle">${d.v}</text>`;
+    });
+  }
+  $('#normChart').innerHTML = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${t('normTitle')}">${g}</svg>`;
+}
+
+function renderLevelTable() {
+  const rng = (a) => `${a[0]}–${a[1]}`;
+  let h = `<tr><th>${t('lvlCards')}</th><th>${t('lvlExam')}</th><th>I</th><th>II</th><th>III</th><th>IV</th><th>V</th></tr>`;
+  [['c23', '2+3'], ['c123', '1+2+3']].forEach(([m, label]) => {
+    const done = Array.from({ length: 10 }, (_, i) => sumFor(i + 1, m)).filter(v => v !== null);
+    const last = done.length ? done[done.length - 1] : null;
+    ['M7', 'E7'].forEach((tt, k) => {
+      const n = NORMS[m][tt];
+      const cells = ['I', 'II', 'III', 'IV', 'V'];
+      const txt = { I: `≥ ${n.I}`, II: rng(n.II), III: rng(n.III), IV: rng(n.IV), V: `0–${n.IV[0] - 1}` };
+      const cur = last !== null && m === mode ? levelOf(last, n) : null;
+      h += `<tr>${k === 0 ? `<td class="grp" rowspan="2">${t('card')} ${label}</td>` : ''}<td><b>${tt}</b></td>` +
+        cells.map(c => `<td class="${c === 'III' ? 'mid' : ''}${cur === c ? ' hl' : ''}">${txt[c]}</td>`).join('') + '</tr>';
+    });
+  });
+  $('#lvlTable').innerHTML = h;
+}
+
+/* ---------------- render: guide ---------------- */
+function renderGuide() {
+  const g = T[lang].g;
+  const li = a => a.map(x => `<li>${x}</li>`).join('');
+  $('#guideBox').innerHTML = `
+    <div class="hero glass" style="grid-template-columns:1fr"><div>
+      <h2>${t('guideTitle')}</h2><p>${t('guideIntro')}</p>
+      <button class="btn primary big" id="guideStart">${t('guideStart')}</button></div></div>
+    <h3 class="sec">${g.whatT}</h3><div class="panel glass" style="margin-top:0"><ul class="gl">${li(g.what)}</ul></div>
+    <h3 class="sec">${g.stepsT}</h3>
+    <div class="steps">${g.steps.map((x, i) => `<div class="step glass"><div class="num">${i + 1}</div><div><h4>${x[0]}</h4><p>${x[1]}</p></div></div>`).join('')}</div>
+    <h3 class="sec">${g.errT}</h3><div class="panel glass" style="margin-top:0"><p style="margin:0">${g.err}</p></div>
+    <h3 class="sec">${g.graphT}</h3><div class="panel glass" style="margin-top:0"><ul class="gl">${li(g.graph)}</ul></div>
+    <h3 class="sec">${g.planT}</h3><div class="panel glass" style="margin-top:0"><ul class="gl">${li(g.plan)}</ul></div>
+    <h3 class="sec">${g.faqT}</h3>
+    <div class="faqs">${g.faq.map(x => `<details class="faq glass"><summary>${x[0]}</summary><p>${x[1]}</p></details>`).join('')}</div>
+    <h3 class="sec">${g.glossT}</h3>
+    <div class="panel glass" style="margin-top:0"><dl class="gloss">${g.gloss.map(x => `<dt>${x[0]}</dt><dd>${x[1]}</dd>`).join('')}</dl></div>`;
+  $('#guideStart').onclick = () => { $('[data-tab=practice]').click(); const r = recommend(); openStage(r.e, r.c); };
+}
+
 /* ---------------- render: tips ---------------- */
 function renderTips() {
   $('#tipGrid').innerHTML = T[lang].tips.map((s, i) => `<div class="tip glass"><div class="num">${i + 1}</div><p>${s}</p></div>`).join('');
@@ -608,12 +824,12 @@ function applyLang() {
   renderAll();
   if (st && !$('#stage').hidden) { setStageTexts(); updateHint(); }
 }
-function renderAll() { renderPractice(); renderProgress(); renderTips(); }
+function renderAll() { renderPractice(); renderProgress(); renderGuide(); renderTips(); }
 
 /* ---------------- tabs ---------------- */
 $$('.tabs button').forEach(b => b.addEventListener('click', () => {
   $$('.tabs button').forEach(x => x.classList.toggle('on', x === b));
-  ['practice', 'progress', 'tips'].forEach(n => { $('#tab-' + n).hidden = n !== b.dataset.tab; });
+  ['practice', 'progress', 'guide', 'tips'].forEach(n => { $('#tab-' + n).hidden = n !== b.dataset.tab; });
   if (b.dataset.tab === 'progress') renderProgress();
   window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
 }));
@@ -630,6 +846,10 @@ $('#statCards').addEventListener('change', ev => {
   const v = Math.max(0, Math.min(150, parseInt(i.value, 10) || 0));
   if (v) store.goals[i.dataset.goal] = v; else delete store.goals[i.dataset.goal];
   save(); renderProgress();
+});
+$('#modeSeg').addEventListener('click', ev => {
+  const b = ev.target.closest('[data-mode]'); if (!b) return;
+  mode = b.dataset.mode; store.mode = mode; save(); renderProgress();
 });
 $('#clearBtn').addEventListener('click', () => {
   if (!confirm(t('confirmClear'))) return;
@@ -809,8 +1029,8 @@ $('#finishBtn').addEventListener('click', () => {
     delta = d === 0 ? `<div class="delta">${t('same')}</div>`
       : `<div class="delta ${d > 0 ? 'up' : 'down'}">${d > 0 ? '+' : ''}${d} ${t('vsLast', { d: '' }).trim()}</div>`;
   }
-  const ls = [1, 2, 3].map(c => lastIn(st.e, c));
-  const total = ls.every(Boolean) ? `<div class="delta up">${t('examTotal', { e: st.e, n: ls.reduce((a, x) => a + x.correct, 0) })}</div>` : '';
+  const s23 = sumFor(st.e, 'c23');
+  const total = s23 !== null ? `<div class="delta up">${t('examTotal', { e: st.e, n: s23, l: levelOf(s23, NORMS.c23.E7) })}</div>` : '';
   const acc = reached ? Math.round(correct / reached * 100) : 0;
 
   $('#res').innerHTML = `
